@@ -4,9 +4,10 @@ use tokio::sync::RwLock;
 use crate::{
     error::Result,
     server::Server,
-    specs::{Specs, watch_specs},
+    specs::{specs_struct::Specs, watch_specs},
 };
 
+pub mod args;
 pub mod error;
 pub mod server;
 pub mod specs;

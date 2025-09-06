@@ -1,4 +1,4 @@
-use std::{net::SocketAddr, sync::Arc};
+use std::net::SocketAddr;
 
 use http_body_util::Full;
 use hyper::{
@@ -6,16 +6,13 @@ use hyper::{
     service::service_fn,
 };
 use hyper_util::rt::TokioIo;
-use tokio::{net::TcpListener, sync::RwLock};
+use tokio::net::TcpListener;
 
-use crate::{
-    error::Result,
-    specs::{SharedSpecs, Specs},
-};
+use crate::{error::Result, specs::specs_struct::SharedSpecs};
 
 pub struct Server {
     listener: TcpListener,
-    specs: Arc<RwLock<Specs>>,
+    specs: SharedSpecs,
 }
 
 impl Server {
@@ -50,7 +47,7 @@ impl Server {
 
     async fn handle_request(
         req: Request<impl hyper::body::Body>,
-        specs: Arc<RwLock<Specs>>,
+        specs: SharedSpecs,
     ) -> Result<Response<Full<Bytes>>> {
         let specs = specs.read().await;
 

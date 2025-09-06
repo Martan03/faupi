@@ -14,6 +14,8 @@ pub enum Error {
     Hyper(#[from] hyper::Error),
     #[error(transparent)]
     Notify(#[from] notify::Error),
+    #[error(transparent)]
+    Pareg(#[from] pareg::ArgError),
     #[error("{0}")]
     Msg(String),
 }
