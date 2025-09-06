@@ -1,6 +1,7 @@
-use std::{fs::File, io::BufReader, path::Path};
+use std::{fs::File, io::BufReader, path::Path, sync::Arc};
 
 use serde::{Deserialize, Serialize};
+use tokio::sync::RwLock;
 
 use crate::{
     error::{Error, Result},
@@ -12,8 +13,10 @@ pub mod response;
 pub mod spec;
 pub mod status_code;
 
+pub type SharedSpecs = Arc<RwLock<Specs>>;
+
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct Specs(Vec<Spec>);
+pub struct Specs(pub Vec<Spec>);
 
 impl Specs {
     /// Loads specs from the given file based on the file extension.
@@ -39,5 +42,11 @@ impl Specs {
     pub fn from_json(file: impl AsRef<Path>) -> Result<Self> {
         let buffer = BufReader::new(File::open(file)?);
         Ok(serde_json::from_reader(buffer)?)
+    }
+}
+
+impl From<Specs> for SharedSpecs {
+    fn from(value: Specs) -> Self {
+        Arc::new(RwLock::new(value))
     }
 }

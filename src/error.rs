@@ -10,6 +10,8 @@ pub enum Error {
     SerdeJson(#[from] serde_json::Error),
     #[error(transparent)]
     SerdeYaml(#[from] serde_yaml::Error),
+    #[error(transparent)]
+    Hyper(#[from] hyper::Error),
     #[error("{0}")]
     Msg(String),
 }
