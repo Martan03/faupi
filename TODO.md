@@ -7,9 +7,9 @@
 - Live reload
 - Dynamic mocking ($variable, such as $uuid $name and so on)
 - Response latency simulation
-- Import OpenAPI spec and generate mock
 
 ## Extra
 
 - UI
+- Import OpenAPI spec and generate mock
 - Multiple response support (fixed selection, random, cycle)
