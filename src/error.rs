@@ -12,6 +12,8 @@ pub enum Error {
     SerdeYaml(#[from] serde_yaml::Error),
     #[error(transparent)]
     Hyper(#[from] hyper::Error),
+    #[error(transparent)]
+    Notify(#[from] notify::Error),
     #[error("{0}")]
     Msg(String),
 }
