@@ -1,5 +1,3 @@
-use std::net::SocketAddr;
-
 use http_body_util::Full;
 use hyper::{
     Request, Response, StatusCode, body::Bytes, server::conn::http1,
@@ -16,12 +14,9 @@ pub struct Server {
 }
 
 impl Server {
-    pub async fn new<A>(addr: A, specs: SharedSpecs) -> Result<Self>
-    where
-        A: Into<SocketAddr>,
-    {
+    pub async fn new(addr: (&str, u16), specs: SharedSpecs) -> Result<Self> {
         Ok(Self {
-            listener: TcpListener::bind(addr.into()).await?,
+            listener: TcpListener::bind(addr).await?,
             specs,
         })
     }

@@ -16,6 +16,10 @@ pub enum Error {
     Notify(#[from] notify::Error),
     #[error(transparent)]
     Pareg(#[from] pareg::ArgError),
+    #[error(transparent)]
+    AddrParse(#[from] std::net::AddrParseError),
+    #[error(transparent)]
+    TokioJoin(#[from] tokio::task::JoinError),
     #[error("{0}")]
     Msg(String),
 }

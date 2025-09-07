@@ -1,10 +1,10 @@
-use std::sync::Arc;
-use tokio::sync::RwLock;
+use pareg::Pareg;
+use std::process::ExitCode;
+use tokio::task::JoinSet;
 
 use crate::{
+    args::{action::Action, args_struct::Args},
     error::Result,
-    server::Server,
-    specs::{specs_struct::Specs, watch_specs},
 };
 
 pub mod args;
@@ -13,12 +13,28 @@ pub mod server;
 pub mod specs;
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    let file = "test.yaml";
-    let specs = Arc::new(RwLock::new(Specs::load(file)?));
+async fn main() -> ExitCode {
+    match run().await {
+        Ok(_) => ExitCode::SUCCESS,
+        Err(e) => {
+            eprintln!("Error: {}", e);
+            ExitCode::FAILURE
+        }
+    }
+}
 
-    let _watcher = watch_specs(file, specs.clone())?;
+async fn run() -> Result<()> {
+    let args = Args::parse(Pareg::args())?;
+    let mut set = JoinSet::new();
+    for action in args.actions {
+        match action {
+            Action::Serve(s) => _ = set.spawn(async move { s.run().await }),
+        }
+    }
 
-    let server = Server::new(([127, 0, 0, 1], 3000), specs).await?;
-    server.run().await
+    while let Some(res) = set.join_next().await {
+        res??;
+    }
+
+    Ok(())
 }

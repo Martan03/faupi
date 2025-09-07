@@ -1,7 +1,8 @@
 use pareg::Pareg;
+use termal::printcln;
 
 use crate::{
-    args::{action::Action, serve_args::ServeArgs},
+    args::{action::Action, serve::Serve},
     error::Result,
 };
 
@@ -11,20 +12,57 @@ pub struct Args {
 }
 
 impl Args {
+    pub const VERSION_NUMBER: &str = {
+        let v = option_env!("CARGO_PKG_VERSION");
+        if let Some(v) = v { v } else { "unknown" }
+    };
+
     pub fn parse(mut args: Pareg) -> Result<Args> {
         let mut parsed = Self::default();
 
         while let Some(arg) = args.peek() {
             match arg {
-                "serve" => {
+                "s" | "serve" => {
                     args.next();
-                    let serve_args = ServeArgs::parse(&mut args)?;
-                    parsed.actions.push(Action::Serve(serve_args));
+                    let serve = Serve::parse(&mut args)?;
+                    parsed.actions.push(Action::Serve(serve));
+                }
+                "-h" | "--help" | "h" | "help" => {
+                    args.next();
+                    Self::help();
                 }
                 arg => eprintln!("Unknown argument: '{arg}'"),
             }
         }
 
         Ok(parsed)
+    }
+
+    pub fn help() {
+        printcln!(
+            "Welcome to {'g}Faupi{'_} by {}{'_}
+{'bl}Version {}{'_}
+
+Blazingly fast API Mock Server written in Rust.
+
+{'g}Usage{'_}:
+  {'y}faupi{'_} [{'db}action{'_}]
+
+{'g}Actions{'_}:
+  {'db}s  serve{'_} {'bl}[serve arguments] [--]{'_}
+    Creates the API mock server based on the arguments.
+
+{'g}Serve arguments{'_}:
+  {'y}-s  --spec{'_} <filepath>
+    Path to the specification file.
+
+  {'y}-a  --address{'_} <address>
+    Mock API server address.
+
+  {'y}-p  --port{'_} <port>
+    Mock API server port.",
+            termal::gradient("Martan03", (0, 220, 255), (175, 80, 255)),
+            Self::VERSION_NUMBER
+        );
     }
 }

@@ -1,6 +1,6 @@
-use crate::args::serve_args::ServeArgs;
+use crate::args::serve::Serve;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Action {
-    Serve(ServeArgs),
+    Serve(Serve),
 }

@@ -12,5 +12,6 @@ pareg = "0.10.0"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.143"
 serde_yaml = "0.9.34"
+termal = "4.1.0"
 thiserror = "2.0.16"
 tokio = { version = "1.47.1", features = ["macros", "net", "rt", "rt-multi-thread"] }

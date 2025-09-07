@@ -95,6 +95,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "termal 4.1.0",
  "thiserror",
  "tokio",
 ]
@@ -412,7 +413,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
- "termal",
+ "termal 3.0.1",
  "thiserror",
 ]
 
@@ -590,8 +591,18 @@ version = "3.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7e90830464520ccfbf09c1819eafb597f8aa99ef1ecc55604a860e51a90fb5d8"
 dependencies = [
- "termal_core",
- "termal_proc",
+ "termal_core 3.0.1",
+ "termal_proc 3.0.1",
+]
+
+[[package]]
+name = "termal"
+version = "4.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d88ba200714f7885d798852bbaf6d8572d4d73c34a20917138d1ea8e2bdc4ae7"
+dependencies = [
+ "termal_core 4.1.0",
+ "termal_proc 4.1.0",
 ]
 
 [[package]]
@@ -609,12 +620,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "termal_core"
+version = "4.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb9ea6e2032d06e9c5dfc9c7637a3ee950a65500b91a2d1490c1bff95ec825ea"
+dependencies = [
+ "base64",
+ "litrs 0.5.1",
+ "minlin",
+ "place_macro",
+ "proc-macro2",
+ "thiserror",
+]
+
+[[package]]
 name = "termal_proc"
 version = "3.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5546374abdde10af71bf0833cdac2dec6ad3acbd86cd9297c61d399377dd447c"
 dependencies = [
- "termal_core",
+ "termal_core 3.0.1",
+]
+
+[[package]]
+name = "termal_proc"
+version = "4.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "28c109b6a2cb153cd90a216e9e94475ec078dac20784d927b4426e449ec3682f"
+dependencies = [
+ "termal_core 4.1.0",
 ]
 
 [[package]]

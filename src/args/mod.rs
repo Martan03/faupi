@@ -4,7 +4,7 @@ use crate::error::{Error, Result};
 
 pub mod action;
 pub mod args_struct;
-pub mod serve_args;
+pub mod serve;
 
 fn missing_param_err(param: &str) -> Error {
     Error::Msg(format!("missing required argument: {param}"))
