@@ -6,7 +6,7 @@ use tokio::sync::RwLock;
 use crate::{
     args::{missing_param_err, next_arg},
     error::Result,
-    server::Server,
+    server::{router::Router, server_struct::Server},
     specs::{specs_struct::Specs, watch_specs},
 };
 
@@ -46,11 +46,12 @@ impl Serve {
     }
 
     pub async fn run(&self) -> Result<()> {
-        let specs = Arc::new(RwLock::new(Specs::load(&self.file)?));
+        let specs = Specs::load(&self.file)?;
+        let router = Arc::new(RwLock::new(Router::new(specs)?));
 
-        let _watcher = watch_specs(&self.file, specs.clone())?;
+        let _watcher = watch_specs(&self.file, router.clone())?;
 
-        let server = Server::new((&self.server, self.port), specs).await?;
+        let server = Server::new((&self.server, self.port), router).await?;
         server.run().await
     }
 }

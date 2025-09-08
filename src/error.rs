@@ -13,6 +13,8 @@ pub enum Error {
     #[error(transparent)]
     Hyper(#[from] hyper::Error),
     #[error(transparent)]
+    HyperHttp(#[from] hyper::http::Error),
+    #[error(transparent)]
     Notify(#[from] notify::Error),
     #[error(transparent)]
     Pareg(#[from] pareg::ArgError),

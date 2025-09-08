@@ -5,3 +5,9 @@
     body:
       id: 1
       name: Alice
+- method: Get
+  url: /faupi/router/test
+  response:
+    status: 200
+    body:
+      message: It actually works
