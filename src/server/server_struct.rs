@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use http_body_util::Full;
 use hyper::{
     Request, Response, body::Bytes, server::conn::http1, service::service_fn,
@@ -13,6 +15,7 @@ pub struct Server {
 }
 
 impl Server {
+    /// Creates new server on the given address
     pub async fn new(addr: (&str, u16), router: SharedRouter) -> Result<Self> {
         Ok(Self {
             listener: TcpListener::bind(addr).await?,
@@ -20,6 +23,7 @@ impl Server {
         })
     }
 
+    /// Starts the server
     pub async fn run(&self) -> Result<()> {
         loop {
             let (tcp, _) = self.listener.accept().await?;
@@ -39,11 +43,15 @@ impl Server {
         }
     }
 
+    /// Handles the HTTP request and returns the corresponding response
     async fn handle_request(
         req: Request<impl hyper::body::Body>,
         router: SharedRouter,
     ) -> Result<Response<Full<Bytes>>> {
         let router = router.read().await;
-        Ok(router.find(req.method(), req.uri().path()).clone())
+        let mut vars = HashMap::new();
+        let res = router.find(req.method(), req.uri().path(), &mut vars);
+
+        Ok(res.clone())
     }
 }

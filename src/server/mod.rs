@@ -4,5 +4,6 @@ use hyper::body::Bytes;
 pub mod router;
 pub mod router_node;
 pub mod server_struct;
+pub mod url;
 
 pub type HyperRes = hyper::Response<Full<Bytes>>;

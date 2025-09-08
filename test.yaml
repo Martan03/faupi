@@ -1,12 +1,12 @@
 - method: Get
-  url: /users/1
+  url: /users/{id:number}
   response:
     status: 200
     body:
       id: 1
       name: Alice
 - method: Get
-  url: /faupi/router/test
+  url: /faupi/router/{name:string}-{test:string}-{another:number}
   response:
     status: 200
     body:

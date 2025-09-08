@@ -6,7 +6,11 @@ use tokio::sync::RwLock;
 
 use crate::{
     error::Result,
-    server::{HyperRes, router_node::RouterNode},
+    server::{
+        HyperRes,
+        router_node::RouterNode,
+        url::{parser::UrlParser, var::UrlVar},
+    },
     specs::{spec::Spec, specs_struct::Specs},
 };
 
@@ -19,6 +23,7 @@ pub struct Router {
 }
 
 impl Router {
+    /// Creates new Router tree based on the given specification
     pub fn new(specs: Specs) -> Result<Self> {
         let mut router = Self::default();
         for spec in specs.0 {
@@ -27,25 +32,41 @@ impl Router {
         Ok(router)
     }
 
+    /// Inserts route to the route tree and converts the spec response to hyper
+    /// response.
     pub fn insert(&mut self, spec: Spec) -> Result<()> {
         let method = Method::from(spec.method);
         let root = self.roots.entry(method).or_default();
 
-        let mut url_parts = spec.url.split("/");
-        url_parts.next();
-        root.insert(url_parts, HyperRes::try_from(spec.response)?);
+        let mut chars = spec.url.chars();
+        let mut parser = UrlParser::new(&mut chars);
+        _ = parser.next()?;
+        root.insert(parser, HyperRes::try_from(spec.response)?)?;
         Ok(())
     }
 
-    pub fn find(&self, method: &Method, url: &str) -> &HyperRes {
-        self.find_opt(method, url).unwrap_or(&self.not_found)
+    /// Finds a response in the response tree, gives Not Found response when
+    /// finding fails
+    pub fn find(
+        &self,
+        method: &Method,
+        url: &str,
+        vars: &mut HashMap<String, UrlVar>,
+    ) -> &HyperRes {
+        self.find_opt(method, url, vars).unwrap_or(&self.not_found)
     }
 
-    pub fn find_opt(&self, method: &Method, url: &str) -> Option<&HyperRes> {
+    /// Finds a response in the response tree, returns None when finding fails
+    pub fn find_opt(
+        &self,
+        method: &Method,
+        url: &str,
+        vars: &mut HashMap<String, UrlVar>,
+    ) -> Option<&HyperRes> {
         let mut url_parts = url.split("/");
         url_parts.next();
         if let Some(root) = self.roots.get(method) {
-            return root.find(url_parts);
+            return root.find(url_parts, vars);
         }
         None
     }

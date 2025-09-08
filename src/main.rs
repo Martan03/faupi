@@ -1,5 +1,6 @@
 use pareg::Pareg;
 use std::process::ExitCode;
+use termal::eprintcln;
 use tokio::task::JoinSet;
 
 use crate::{
@@ -17,7 +18,7 @@ async fn main() -> ExitCode {
     match run().await {
         Ok(_) => ExitCode::SUCCESS,
         Err(e) => {
-            eprintln!("Error: {}", e);
+            eprintcln!("{'r}Error{'_}: {}", e);
             ExitCode::FAILURE
         }
     }

@@ -1,5 +1,7 @@
 use thiserror::Error;
 
+use crate::server::url::error::UrlError;
+
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, Error)]
@@ -22,6 +24,8 @@ pub enum Error {
     AddrParse(#[from] std::net::AddrParseError),
     #[error(transparent)]
     TokioJoin(#[from] tokio::task::JoinError),
+    #[error(transparent)]
+    Url(#[from] UrlError),
     #[error("{0}")]
     Msg(String),
 }
