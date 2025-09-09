@@ -11,3 +11,4 @@
     status: 200
     body:
       message: It actually works, $name! Thanks for $rate/10. 
+      rate: $rate
