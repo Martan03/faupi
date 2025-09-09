@@ -2,10 +2,8 @@ use std::{collections::HashMap, str::Split};
 
 use crate::{
     error::Result,
-    server::{
-        HyperRes,
-        url::{parser::UrlParser, segment::UrlSegment, var::UrlVar},
-    },
+    server::url::{parser::UrlParser, segment::UrlSegment, var::UrlVar},
+    specs::response::Response,
 };
 
 /// Node in the router tree
@@ -13,13 +11,13 @@ use crate::{
 pub struct RouterNode {
     pub children: HashMap<String, RouterNode>,
     pub dyn_children: Vec<(UrlSegment, RouterNode)>,
-    pub response: Option<HyperRes>,
+    pub response: Option<Response>,
 }
 
 impl RouterNode {
     /// Inserts the given response to the router tree. When this node is a final
     /// node, sets its response, otherwise continues traversing.
-    pub fn insert(&mut self, mut url: UrlParser, res: HyperRes) -> Result<()> {
+    pub fn insert(&mut self, mut url: UrlParser, res: Response) -> Result<()> {
         let Some(segment) = url.next()? else {
             self.response = Some(res);
             return Ok(());
@@ -42,7 +40,7 @@ impl RouterNode {
         &self,
         mut url: Split<'_, &str>,
         vars: &mut HashMap<String, UrlVar>,
-    ) -> Option<&HyperRes> {
+    ) -> Option<&Response> {
         let Some(part) = url.next() else {
             return self.response.as_ref();
         };

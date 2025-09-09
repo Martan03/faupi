@@ -41,7 +41,7 @@ impl Router {
         let mut chars = spec.url.chars();
         let mut parser = UrlParser::new(&mut chars);
         _ = parser.next()?;
-        root.insert(parser, HyperRes::try_from(spec.response)?)?;
+        root.insert(parser, spec.response)?;
         Ok(())
     }
 
@@ -52,8 +52,9 @@ impl Router {
         method: &Method,
         url: &str,
         vars: &mut HashMap<String, UrlVar>,
-    ) -> &HyperRes {
-        self.find_opt(method, url, vars).unwrap_or(&self.not_found)
+    ) -> HyperRes {
+        self.find_opt(method, url, vars)
+            .unwrap_or(self.not_found.clone())
     }
 
     /// Finds a response in the response tree, returns None when finding fails
@@ -62,11 +63,20 @@ impl Router {
         method: &Method,
         url: &str,
         vars: &mut HashMap<String, UrlVar>,
-    ) -> Option<&HyperRes> {
+    ) -> Option<HyperRes> {
         let mut url_parts = url.split("/");
         url_parts.next();
-        if let Some(root) = self.roots.get(method) {
-            return root.find(url_parts, vars);
+        if let Some(root) = self.roots.get(method)
+            && let Some(res) = root.find(url_parts, vars)
+        {
+            let body =
+                res.expand_vars(vars).unwrap_or(serde_yaml::Value::Null);
+            let body = serde_json::to_string(&body).unwrap_or("".into());
+            return hyper::Response::builder()
+                .status(res.status.0)
+                .header("content-type", "application/json")
+                .body(Full::new(Bytes::from(body)))
+                .ok();
         }
         None
     }

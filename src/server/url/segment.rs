@@ -116,7 +116,7 @@ impl UrlSegment {
     ) -> Option<UrlVar> {
         let end = match self.tokens.get(id + 1) {
             Some(UrlToken::Static(s)) => s.chars().next().unwrap_or('/'),
-            _ => return None,
+            _ => '/',
         };
 
         let mut value = String::new();

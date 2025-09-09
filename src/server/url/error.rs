@@ -2,7 +2,7 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum UrlError {
-    #[error("unclosed variable `{0}` in URL pattern.")]
+    #[error("unclosed variable `{0}` in specification.")]
     UnclosedVar(String),
     #[error(
         "invalid character in variable {name}: expected {exp}, found {found}."

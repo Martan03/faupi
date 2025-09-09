@@ -50,8 +50,6 @@ impl Server {
     ) -> Result<Response<Full<Bytes>>> {
         let router = router.read().await;
         let mut vars = HashMap::new();
-        let res = router.find(req.method(), req.uri().path(), &mut vars);
-
-        Ok(res.clone())
+        Ok(router.find(req.method(), req.uri().path(), &mut vars))
     }
 }

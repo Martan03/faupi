@@ -6,8 +6,8 @@
       id: 1
       name: Alice
 - method: Get
-  url: /faupi/router/{name:string}-{test:string}-{another:number}
+  url: /faupi/router/{name}/rate-{rate:number}
   response:
     status: 200
     body:
-      message: It actually works
+      message: It actually works, $name! Thanks for $rate/10. 
