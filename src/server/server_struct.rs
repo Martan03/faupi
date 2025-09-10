@@ -1,12 +1,12 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 
 use http_body_util::Full;
 use hyper::{
     Request, Response, body::Bytes, server::conn::http1, service::service_fn,
 };
 use hyper_util::rt::TokioIo;
-use log::{error, info};
-use tokio::net::TcpListener;
+use log::{debug, error, info};
+use tokio::{net::TcpListener, time::sleep};
 
 use crate::{error::Result, server::router::SharedRouter};
 
@@ -58,6 +58,20 @@ impl Server {
     ) -> Result<Response<Full<Bytes>>> {
         let router = router.read().await;
         let mut vars = HashMap::new();
-        Ok(router.find(req.method(), req.uri().path(), &mut vars))
+
+        let method = req.method();
+        let url = req.uri().path();
+        if let Some(res) = router.find(method, url, &mut vars) {
+            if let Some(delay) = res.delay {
+                sleep(Duration::from_millis(delay)).await;
+            }
+
+            let hyper_res = res.to_http_response(&vars)?;
+            debug!("Request: {} {} -> response {}", method, url, res.status.0);
+            Ok(hyper_res)
+        } else {
+            info!("Request {} {} -> response 404.", method, url);
+            Ok(router.not_found.clone())
+        }
     }
 }

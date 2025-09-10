@@ -12,3 +12,7 @@
     body:
       message: It actually works, $name! Thanks for $rate/10. 
       rate: $rate
+- method: Get
+  url: /empty
+  response:
+    delay: 10000

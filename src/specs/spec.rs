@@ -1,4 +1,4 @@
-use serde::{Deserialize};
+use serde::Deserialize;
 
 use crate::specs::{method::Method, response::Response};
 
@@ -6,5 +6,6 @@ use crate::specs::{method::Method, response::Response};
 pub struct Spec {
     pub method: Method,
     pub url: String,
+    #[serde(default)]
     pub response: Response,
 }

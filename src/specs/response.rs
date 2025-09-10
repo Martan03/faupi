@@ -1,19 +1,40 @@
 use std::collections::HashMap;
 
+use http_body_util::Full;
+use hyper::body::Bytes;
 use serde::Deserialize;
 
 use crate::{
-    server::url::var::UrlVar,
+    error::Result,
+    server::{HyperRes, url::var::UrlVar},
     specs::{body::body::Body, status_code::StatusCode},
 };
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Default, Clone, Deserialize)]
 pub struct Response {
+    #[serde(default)]
     pub status: StatusCode,
+    #[serde(default)]
+    pub delay: Option<u64>,
+    #[serde(default)]
     pub body: Body,
 }
 
 impl Response {
+    pub fn to_http_response(
+        &self,
+        vars: &HashMap<String, UrlVar>,
+    ) -> Result<HyperRes> {
+        let body = self.expand_vars(&vars);
+        let body = serde_json::to_string(&body).unwrap_or("".into());
+
+        hyper::Response::builder()
+            .status(self.status.0)
+            .header("content-type", "application/json")
+            .body(Full::new(Bytes::from(body)))
+            .map_err(Into::into)
+    }
+
     pub fn expand_vars(
         &self,
         vars: &HashMap<String, UrlVar>,

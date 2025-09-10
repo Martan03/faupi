@@ -54,7 +54,7 @@ should respond on each URL with different HTTP methods. The endpoint specificati
     `Path`
 - Endpoint URL (`url`)
     - See [specification URL](#specification-url).
-- Response (`response`)
+- Response (`response`) - optional
     - See [specification response](#specification-response).
 
 ### Specification URL
@@ -77,9 +77,11 @@ Currently supported URL parameter types are:
 
 Specification response corresponds to the HTTP response returned by the API
 Mock server. It contains:
-- HTTP response status (`status`)
+- HTTP response status (`status`) - defaults to `200`.
     - 200 = OK, 404 = Not Found,...
-- HTTP response body (`body`)
+- HTTP response delay (`delay`) - defaults to no delay.
+    - Time the server waits before sending response (in milliseconds).
+- HTTP response body (`body`) - defaults to `null`.
     - See [specification response body](#specification-response-body).
 
 #### Specification response body

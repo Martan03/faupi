@@ -2,7 +2,6 @@ use std::{collections::HashMap, sync::Arc};
 
 use http_body_util::Full;
 use hyper::{Method, StatusCode, body::Bytes};
-use log::{debug, info};
 use tokio::sync::RwLock;
 
 use crate::{
@@ -12,7 +11,7 @@ use crate::{
         router_node::RouterNode,
         url::{parser::UrlParser, var::UrlVar},
     },
-    specs::{spec::Spec, specs_struct::Specs},
+    specs::{response::Response, spec::Spec, specs_struct::Specs},
 };
 
 pub type SharedRouter = Arc<RwLock<Router>>;
@@ -46,41 +45,18 @@ impl Router {
         Ok(())
     }
 
-    /// Finds a response in the response tree, gives Not Found response when
-    /// finding fails
+    /// Finds a response in the response tree, returns None when finding fails
     pub fn find(
         &self,
         method: &Method,
         url: &str,
         vars: &mut HashMap<String, UrlVar>,
-    ) -> HyperRes {
-        self.find_opt(method, url, vars)
-            .unwrap_or(self.not_found.clone())
-    }
-
-    /// Finds a response in the response tree, returns None when finding fails
-    pub fn find_opt(
-        &self,
-        method: &Method,
-        url: &str,
-        vars: &mut HashMap<String, UrlVar>,
-    ) -> Option<HyperRes> {
+    ) -> Option<&Response> {
         let mut url_parts = url.split("/");
         url_parts.next();
-        if let Some(root) = self.roots.get(method)
-            && let Some(res) = root.find(url_parts, vars)
-        {
-            let body = res.expand_vars(vars);
-            let body = serde_json::to_string(&body).unwrap_or("".into());
-
-            debug!("Request: {} {} -> response {}.", method, url, res.status.0);
-            return hyper::Response::builder()
-                .status(res.status.0)
-                .header("content-type", "application/json")
-                .body(Full::new(Bytes::from(body)))
-                .ok();
+        if let Some(root) = self.roots.get(method) {
+            return root.find(url_parts, vars);
         }
-        info!("Request {} {} -> response 404.", method, url);
         None
     }
 }

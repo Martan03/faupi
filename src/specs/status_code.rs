@@ -14,3 +14,9 @@ impl TryFrom<StatusCode> for hyper::StatusCode {
         })
     }
 }
+
+impl Default for StatusCode {
+    fn default() -> Self {
+        Self(200)
+    }
+}
