@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Display};
 
 use log::warn;
 use serde_yaml::Value;
@@ -14,6 +14,7 @@ pub struct Dynamic {
 pub enum DynamicValue {
     Static(String),
     Var(String),
+    Fake(String),
 }
 
 impl Dynamic {
@@ -46,8 +47,22 @@ impl Dynamic {
                         warn!("Response variable `${var}` not defined.")
                     }
                 }
+                DynamicValue::Fake(_attr) => todo!(),
             }
         }
         serde_yaml::Value::String(res)
+    }
+}
+
+impl Display for Dynamic {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for value in self.values.iter() {
+            match value {
+                DynamicValue::Static(s) => write!(f, "{s}")?,
+                DynamicValue::Var(ident) => write!(f, "${{{ident}}}")?,
+                DynamicValue::Fake(attr) => write!(f, "${{fake.{attr}}}")?,
+            }
+        }
+        Ok(())
     }
 }

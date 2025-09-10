@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use http_body_util::Full;
 use hyper::body::Bytes;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     error::Result,
@@ -10,7 +10,7 @@ use crate::{
     specs::{body::body::Body, status_code::StatusCode},
 };
 
-#[derive(Debug, Default, Clone, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Response {
     #[serde(default)]
     pub status: StatusCode,

@@ -1,13 +1,13 @@
 use std::{fs::File, io::BufReader, path::Path};
 
-use serde::{Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     error::{Error, Result},
     specs::spec::Spec,
 };
 
-#[derive(Debug, Default, Clone, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Specs(pub Vec<Spec>);
 
 impl Specs {

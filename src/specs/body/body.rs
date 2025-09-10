@@ -164,6 +164,56 @@ impl Body {
     }
 }
 
+impl From<Body> for serde_yaml::Value {
+    fn from(value: Body) -> Self {
+        Self::from(&value)
+    }
+}
+
+impl From<&Body> for serde_yaml::Value {
+    fn from(value: &Body) -> Self {
+        match value {
+            Body::Null => serde_yaml::Value::Null,
+            Body::Bool(b) => serde_yaml::Value::Bool(*b),
+            Body::Number(number) => serde_yaml::Value::Number(number.clone()),
+            Body::String(s) => serde_yaml::Value::String(s.clone()),
+            Body::Sequence(items) => {
+                let mut new_items = vec![];
+                for item in items {
+                    new_items.push(Self::from(item));
+                }
+                serde_yaml::Value::Sequence(new_items)
+            }
+            Body::Mapping(mapping) => {
+                let mut new_map = serde_yaml::Mapping::new();
+                for (k, v) in mapping.map.iter() {
+                    new_map.insert(Self::from(k), Self::from(v));
+                }
+                serde_yaml::Value::Mapping(new_map)
+            }
+            Body::Tagged(tagged) => serde_yaml::Value::Tagged(Box::new(
+                serde_yaml::value::TaggedValue {
+                    tag: tagged.tag.clone(),
+                    value: Self::from(&tagged.value),
+                },
+            )),
+            Body::Dynamic(dynamic) => {
+                serde_yaml::Value::String(dynamic.to_string())
+            }
+        }
+    }
+}
+
+impl serde::Serialize for Body {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let value: serde_yaml::Value = self.clone().into();
+        value.serialize(serializer)
+    }
+}
+
 impl<'de> serde::Deserialize<'de> for Body {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
