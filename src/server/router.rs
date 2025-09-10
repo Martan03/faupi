@@ -69,8 +69,7 @@ impl Router {
         if let Some(root) = self.roots.get(method)
             && let Some(res) = root.find(url_parts, vars)
         {
-            let body =
-                res.expand_vars(vars).unwrap_or(serde_yaml::Value::Null);
+            let body = res.expand_vars(vars);
             let body = serde_json::to_string(&body).unwrap_or("".into());
             return hyper::Response::builder()
                 .status(res.status.0)

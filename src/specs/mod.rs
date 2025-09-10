@@ -7,6 +7,7 @@ use crate::{
     specs::specs_struct::Specs,
 };
 
+pub mod body;
 pub mod method;
 pub mod response;
 pub mod spec;
