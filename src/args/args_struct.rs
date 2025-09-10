@@ -31,6 +31,10 @@ impl Args {
                     args.next();
                     Self::help();
                 }
+                "-v" | "--version" => {
+                    println!("faupi {}", Self::VERSION_NUMBER);
+                    args.next();
+                }
                 arg => eprintln!("Unknown argument: '{arg}'"),
             }
         }
@@ -46,7 +50,14 @@ impl Args {
 Blazingly fast API Mock Server written in Rust.
 
 {'g}Usage{'_}:
-  {'y}faupi{'_} [{'db}action{'_}]
+  {'c}faupi{'_} [{'y}flags{'_}] [{'db}action{'_}]
+
+{'g}Flags{'_}:
+  {'y}-h  --help{'_}
+    Displays this help.
+
+  {'y}-v  --version{'_}
+    Displays the version number of {'c}faupi{'_}.
 
 {'g}Actions{'_}:
   {'db}s  serve{'_} {'bl}[serve arguments] [--]{'_}
