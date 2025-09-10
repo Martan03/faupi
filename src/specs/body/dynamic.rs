@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use log::warn;
 use serde_yaml::Value;
 
 use crate::server::url::var::UrlVar;
@@ -41,6 +42,8 @@ impl Dynamic {
                 DynamicValue::Var(var) => {
                     if let Some(val) = vars.get(var) {
                         res.push_str(&val.to_string());
+                    } else {
+                        warn!("Response variable `${var}` not defined.")
                     }
                 }
             }

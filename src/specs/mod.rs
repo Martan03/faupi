@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use log::{error, info};
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 
 use crate::{
@@ -24,7 +25,7 @@ pub fn watch_specs(
         let event: notify::Event = match res {
             Ok(event) => event,
             Err(e) => {
-                eprintln!("watch error: {:?}", e);
+                error!("Watching specification: {e}.");
                 return;
             }
         };
@@ -42,7 +43,7 @@ fn reload_specs(file: &Path, router: SharedRouter) {
     let specs = match Specs::load(file) {
         Ok(specs) => specs,
         Err(e) => {
-            eprintln!("Failed to reload specs: {e}");
+            error!("Reloading specification: {e}.");
             return;
         }
     };
@@ -51,8 +52,8 @@ fn reload_specs(file: &Path, router: SharedRouter) {
         Ok(new_router) => {
             let mut guard = router.blocking_write();
             *guard = new_router;
-            println!("Specs reloaded");
+            info!("Specification reloaded.");
         }
-        Err(e) => eprintln!("Failed to re-generate router: {e}"),
+        Err(e) => error!("Regenerating router: {e}"),
     }
 }

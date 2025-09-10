@@ -71,7 +71,7 @@ impl<'a> UrlParser<'a> {
             return Err(UrlError::UnclosedVar(name).into());
         }
 
-        return Ok(UrlToken::var(name, ty));
+        UrlToken::var(name, ty)
     }
 
     /// Reads identifier, where identifier can start with any alphabetic

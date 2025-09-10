@@ -7,3 +7,4 @@
 - URLs with parameters
 - Specification endpoint response variables
 - HTTP server
+- Logging

@@ -5,6 +5,7 @@ use hyper::{
     Request, Response, body::Bytes, server::conn::http1, service::service_fn,
 };
 use hyper_util::rt::TokioIo;
+use log::{error, info};
 use tokio::net::TcpListener;
 
 use crate::{error::Result, server::router::SharedRouter};
@@ -25,6 +26,13 @@ impl Server {
 
     /// Starts the server
     pub async fn run(&self) -> Result<()> {
+        let addr = self
+            .listener
+            .local_addr()
+            .map(|a| a.to_string())
+            .unwrap_or("-".to_owned());
+        info!("Server started on {addr}.");
+
         loop {
             let (tcp, _) = self.listener.accept().await?;
             let router = self.router.clone();
@@ -37,7 +45,7 @@ impl Server {
                     }),
                 );
                 if let Err(e) = conn.await {
-                    eprintln!("Error serving connection: {e}");
+                    error!("Serving connection: {e}.");
                 }
             });
         }

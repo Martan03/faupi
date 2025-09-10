@@ -90,7 +90,7 @@ Currently only way to set the variables is from the URL parameters.
 To use a variable inside of a body value, you can add `$` followed by the
 variable name (such as `$name`). To prevent ambiguity, you can also wrap the
 variable name inside of curly brackets (`${name}`) - this way you can chain
-a variable and static string after each other without having to use space.
+a variable and static string after each other without having to use a space.
 
 ### Specification example 
 To add API GET endpoint on URL `/api/example/{id:number}`, we can add this

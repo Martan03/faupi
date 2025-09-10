@@ -26,6 +26,8 @@ pub enum Error {
     TokioJoin(#[from] tokio::task::JoinError),
     #[error(transparent)]
     Url(#[from] UrlError),
+    #[error(transparent)]
+    FlexiLogger(#[from] flexi_logger::FlexiLoggerError),
     #[error("{0}")]
     Msg(String),
 }

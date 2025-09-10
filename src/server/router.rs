@@ -2,6 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use http_body_util::Full;
 use hyper::{Method, StatusCode, body::Bytes};
+use log::{debug, info};
 use tokio::sync::RwLock;
 
 use crate::{
@@ -71,12 +72,15 @@ impl Router {
         {
             let body = res.expand_vars(vars);
             let body = serde_json::to_string(&body).unwrap_or("".into());
+
+            debug!("Request: {} {} -> response {}.", method, url, res.status.0);
             return hyper::Response::builder()
                 .status(res.status.0)
                 .header("content-type", "application/json")
                 .body(Full::new(Bytes::from(body)))
                 .ok();
         }
+        info!("Request {} {} -> response 404.", method, url);
         None
     }
 }

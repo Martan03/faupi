@@ -18,6 +18,8 @@ pub enum UrlError {
     MissingIdent,
     #[error("escape character `\\` must be followed by another character.")]
     EscapeCharMiss,
+    #[error("variable type `{0}` doesn't exist.")]
+    InvalidType(String),
 }
 
 impl UrlError {
