@@ -20,6 +20,8 @@ pub enum UrlError {
     EscapeCharMiss,
     #[error("variable type `{0}` doesn't exist.")]
     InvalidType(String),
+    #[error("unknown object `{0}`.")]
+    UnknownObject(String),
 }
 
 impl UrlError {

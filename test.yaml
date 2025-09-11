@@ -3,8 +3,9 @@
   response:
     status: 200
     body:
-      id: 1
-      name: Alice
+      id: $id
+      name: $fake.name
+      profession: $fake.profession
 - method: Get
   url: /faupi/router/{name}/rate-{rate:number}
   response:

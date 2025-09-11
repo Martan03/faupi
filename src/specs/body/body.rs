@@ -115,7 +115,7 @@ impl TryFrom<String> for Body {
                         res.push(DynamicValue::Static(buffer));
                         buffer = String::new();
                     }
-                    res.push(DynamicValue::Var(Self::read_var(&mut chars)?));
+                    res.push(Self::read_var(&mut chars)?);
                 }
                 _ => buffer.push(c),
             }
@@ -129,16 +129,34 @@ impl TryFrom<String> for Body {
 }
 
 impl Body {
-    fn read_var(chars: &mut Peekable<Chars<'_>>) -> error::Result<String> {
+    fn read_var(
+        chars: &mut Peekable<Chars<'_>>,
+    ) -> error::Result<DynamicValue> {
         if chars.peek() != Some(&'{') {
-            return Self::read_ident(chars);
+            return Self::read_var_inner(chars).map(|(_, v)| v);
         }
 
         _ = chars.next();
-        let ident = Self::read_ident(chars)?;
+        let (ident, var) = Self::read_var_inner(chars)?;
         match chars.next() {
-            Some('}') => Ok(ident),
+            Some('}') => Ok(var),
             _ => Err(UrlError::UnclosedVar(ident).into()),
+        }
+    }
+
+    fn read_var_inner(
+        chars: &mut Peekable<Chars<'_>>,
+    ) -> error::Result<(String, DynamicValue)> {
+        let ident = Self::read_ident(chars)?;
+        if chars.peek() != Some(&'.') {
+            return Ok((ident.clone(), DynamicValue::Var(ident)));
+        }
+
+        _ = chars.next();
+        let attr = Self::read_ident(chars)?;
+        match ident.as_str() {
+            "fake" => Ok((ident, DynamicValue::Fake(attr))),
+            _ => Err(UrlError::UnknownObject(ident).into()),
         }
     }
 

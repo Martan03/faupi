@@ -1,9 +1,10 @@
 use std::{collections::HashMap, fmt::Display};
 
+use fake::locales::EN;
 use log::warn;
 use serde_yaml::Value;
 
-use crate::server::url::var::UrlVar;
+use crate::{server::url::var::UrlVar, specs::body::fake::get_fake};
 
 #[derive(Debug, PartialEq, PartialOrd, Clone, Hash)]
 pub struct Dynamic {
@@ -47,7 +48,13 @@ impl Dynamic {
                         warn!("Response variable `${var}` not defined.")
                     }
                 }
-                DynamicValue::Fake(_attr) => todo!(),
+                DynamicValue::Fake(attr) => {
+                    if let Some(val) = get_fake(attr, EN) {
+                        res.push_str(&val.to_string())
+                    } else {
+                        warn!("Response variable `$fake.{attr}` not defined.")
+                    }
+                }
             }
         }
         serde_yaml::Value::String(res)
