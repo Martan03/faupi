@@ -15,6 +15,14 @@ impl TryFrom<StatusCode> for hyper::StatusCode {
     }
 }
 
+impl TryFrom<&str> for StatusCode {
+    type Error = Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        value.parse::<u16>().map(StatusCode).map_err(Into::into)
+    }
+}
+
 impl Default for StatusCode {
     fn default() -> Self {
         Self(200)

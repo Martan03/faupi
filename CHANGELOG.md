@@ -4,6 +4,8 @@
 
 ### Features
 - Response delay
+- Fake data in specification
+- Open API v3.1 importer
 
 ### Changes
 - Add default values to some specification file fields

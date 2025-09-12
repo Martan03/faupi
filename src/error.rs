@@ -28,6 +28,12 @@ pub enum Error {
     Url(#[from] UrlError),
     #[error(transparent)]
     FlexiLogger(#[from] flexi_logger::FlexiLoggerError),
+    #[error(transparent)]
+    Oas3(#[from] oas3::spec::Error),
+    #[error(transparent)]
+    RefOas3(#[from] oas3::spec::RefError),
+    #[error(transparent)]
+    ParseInt(#[from] std::num::ParseIntError),
     #[error("{0}")]
     Msg(String),
 }

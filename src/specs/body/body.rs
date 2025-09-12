@@ -65,6 +65,10 @@ impl Body {
             Body::Dynamic(dynamic) => dynamic.resolve(vars),
         }
     }
+
+    pub fn is_null(&self) -> bool {
+        self == &Self::Null
+    }
 }
 
 impl TryFrom<serde_yaml::Value> for Body {

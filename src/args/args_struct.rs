@@ -2,7 +2,7 @@ use pareg::Pareg;
 use termal::printcln;
 
 use crate::{
-    args::{action::Action, serve::Serve},
+    args::{action::Action, import::Import, serve::Serve},
     error::Result,
 };
 
@@ -26,6 +26,11 @@ impl Args {
                     args.next();
                     let serve = Serve::parse(&mut args)?;
                     parsed.actions.push(Action::Serve(serve));
+                }
+                "i" | "import" => {
+                    args.next();
+                    let import = Import::parse(&mut args)?;
+                    parsed.actions.push(Action::Import(import));
                 }
                 "-h" | "--help" | "h" | "help" => {
                     args.next();

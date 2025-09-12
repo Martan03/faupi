@@ -14,9 +14,9 @@ use crate::{
 pub struct Response {
     #[serde(default)]
     pub status: StatusCode,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub delay: Option<u64>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "Body::is_null")]
     pub body: Body,
 }
 

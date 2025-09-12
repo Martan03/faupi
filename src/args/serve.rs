@@ -5,7 +5,7 @@ use tokio::sync::RwLock;
 
 use crate::{
     args::{missing_param_err, next_arg},
-    error::Result,
+    error::{Error, Result},
     server::{router::Router, server_struct::Server},
     specs::{specs_struct::Specs, watch_specs},
 };
@@ -42,7 +42,7 @@ impl Serve {
                 _ => break,
             }
         }
-        parsed.build()
+        Serve::try_from(parsed)
     }
 
     pub async fn run(&self) -> Result<()> {
@@ -56,12 +56,14 @@ impl Serve {
     }
 }
 
-impl ServeParser {
-    fn build(self) -> Result<Serve> {
+impl TryFrom<ServeParser> for Serve {
+    type Error = Error;
+
+    fn try_from(value: ServeParser) -> Result<Self> {
         Ok(Serve {
-            file: self.file.ok_or_else(|| missing_param_err("--spec"))?,
-            server: self.server.unwrap_or("127.0.0.1".into()),
-            port: self.port.unwrap_or(3000),
+            file: value.file.ok_or_else(|| missing_param_err("--spec"))?,
+            server: value.server.unwrap_or("127.0.0.1".into()),
+            port: value.port.unwrap_or(3000),
         })
     }
 }

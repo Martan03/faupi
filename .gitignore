@@ -1,1 +1,3 @@
 /target
+*.jsonopenapi
+*.yaml

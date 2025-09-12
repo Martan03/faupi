@@ -11,6 +11,7 @@ use crate::{
 
 pub mod args;
 pub mod error;
+pub mod import;
 pub mod server;
 pub mod specs;
 
@@ -46,6 +47,7 @@ async fn run() -> Result<()> {
     for action in args.actions {
         match action {
             Action::Serve(s) => _ = set.spawn(async move { s.run().await }),
+            Action::Import(import) => import.run()?,
         }
     }
 
