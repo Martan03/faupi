@@ -1,6 +1,6 @@
 # faupi changelog
 
-## v0.2.0
+## v0.2.0 - Lord of the Fakes
 
 ### Features
 - Response delay

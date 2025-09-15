@@ -10,6 +10,7 @@ Blazingly fast API Mock Server written in Rust.
     - [Specification response](#specification-response)
         - [Specification response body](#specification-response-body)
     - [Specification example](#specification-example)
+- [Import OpenAPI specification](#import-openapi-specification)
 - [Links](#links)
 
 ## Installation
@@ -42,6 +43,17 @@ showcases running the server on custom address and port.
 More details about all the functionality can be found in the help:
 ```bash
 faupi -h
+```
+
+## Import OpenAPI specification
+
+> Note: this only supports basic OpenAPI specification files
+
+If you already have an OpenAPI specification file, you can import it with 
+`faupi` and convert it to the `faupi` specification file. You can do it like 
+this:
+```bash
+faupi import -i docs.jsonopenapi -o faupi-spec.yaml
 ```
 
 ## Specification
@@ -94,6 +106,12 @@ variable name (such as `$name`). To prevent ambiguity, you can also wrap the
 variable name inside of curly brackets (`${name}`) - this way you can chain
 a variable and static string after each other without having to use a space.
 
+`faupi` also supports generating random variable values. It contains a special
+object-like variable - `fake`. You can then use one of the built-in object
+attributes to generate random value, such as first name, last name, profesion
+and more. You use it as a normal variable with `$` - `$fake.name`. To see
+all the `fake` object attributes, visit [fake object section](#fake-object).
+
 ### Specification example 
 To add API GET endpoint on URL `/api/example/{id:number}`, we can add this
 endpoint specification to out specification file:
@@ -105,6 +123,7 @@ endpoint specification to out specification file:
     body:
       id: $id
       message: Hope you like faupi!
+      review: $fake.name recommends using it.
 ```
 
 This endpoint specification returns response with HTTP response status 200 - OK
@@ -112,6 +131,137 @@ and body contains object with attributes `id` and `message`. The `message`
 contains static string, but the `id` gets expanded to the URL `id` parameter 
 value. For example, when API receives HTTP request with URL `/api/example/36`,
 the response body will contain object with `id` set to `36`.
+
+### Fake object
+
+#### Address
+
+| Attribute                | Description                   |
+| ------------------------ | ----------------------------- |
+| `building_number`        | Random building number        |
+| `city_name`              | Random city name              |
+| `city_prefix`            | Random city prefix            |
+| `city_suffix`            | Random city suffix            |
+| `country_code`           | Random country code           |
+| `latitude`               | Random latitude               |
+| `longitude`              | Random longitude              |
+| `post_code`              | Random postal code            |
+| `secondary_address`      | Random secondary address      |
+| `secondary_address_type` | Random secondary address type |
+| `state_abbr`             | Random state abbreviation     |
+| `state_name`             | Random state name             |
+| `street_name`            | Random street name            |
+| `street_suffix`          | Random street suffix          |
+| `time_zone`              | Random time zone              |
+| `zip_code`               | Random ZIP code               |
+
+#### Barcode
+
+| Attribute | Description    |
+| --------- | -------------- |
+| `isbn`    | Random ISBN    |
+| `isbn10`  | Random ISBN-10 |
+| `isbn13`  | Random ISBN-13 |
+
+#### Company
+
+| Attribute         | Description                 |
+| ----------------- | --------------------------- |
+| `bs`              | Random business slogan      |
+| `bs_adj`          | Random business adjective   |
+| `bs_noun`         | Random business noun        |
+| `bs_verb`         | Random business verb        |
+| `buzzword`        | Random buzzword             |
+| `buzzword_middle` | Random buzzword middle word |
+| `buzzword_tail`   | Random buzzword tail word   |
+| `catch_phrase`    | Random company catch phrase |
+| `company_name`    | Random company name         |
+| `company_suffix`  | Random company suffix       |
+| `industry`        | Random industry             |
+| `profession`      | Random profession           |
+
+#### Credit card
+
+| Attribute            | Description               |
+| -------------------- | ------------------------- |
+| `credit_card_number` | Random credit card number |
+
+#### Currency
+
+| Attribute         | Description            |
+| ----------------- | ---------------------- |
+| `currency_code`   | Random currency code   |
+| `currency_name`   | Random currency name   |
+| `currency_symbol` | Random currency symbol |
+
+#### Filesystem
+
+| Attribute         | Description             |
+| ----------------- | ----------------------- |
+| `dir_path`        | Random directory path   |
+| `file_extension`  | Random file extension   |
+| `file_name`       | Random file name        |
+| `file_path`       | Random file path        |
+| `mime_type`       | Random MIME type        |
+| `semver`          | Random semantic version |
+| `semver_stable`   | Random stable semver    |
+| `semver_unstable` | Random unstable semver  |
+
+#### Finance
+
+| Attribute | Description |
+| --------- | ----------- |
+| `bic`     | Random BIC  |
+| `isin`    | Random ISIN |
+
+#### Internet
+
+| Attribute             | Description                  |
+| --------------------- | ---------------------------- |
+| `domain_suffix`       | Random domain suffix         |
+| `free_email`          | Random free email address    |
+| `free_email_provider` | Random free email provider   |
+| `ip`                  | Random IP address            |
+| `ipv4`                | Random IPv4 address          |
+| `ipv6`                | Random IPv6 address          |
+| `mac_address`         | Random MAC address           |
+| `password`            | Random password (8–20 chars) |
+| `safe_email`          | Random safe email address    |
+| `user_agent`          | Random user agent string     |
+| `username`            | Random username              |
+
+#### Job
+
+| Attribute   | Description          |
+| ----------- | -------------------- |
+| `field`     | Random job field     |
+| `position`  | Random job position  |
+| `seniority` | Random job seniority |
+| `job_title` | Random job title     |
+
+#### Name
+
+| Attribute         | Description            |
+| ----------------- | ---------------------- |
+| `first_name`      | Random first name      |
+| `last_name`       | Random last name       |
+| `name`            | Random full name       |
+| `name_with_title` | Random name with title |
+| `suffix`          | Random suffix          |
+| `title`           | Random title           |
+
+#### Number
+
+| Attribute | Description         |
+| --------- | ------------------- |
+| `digit`   | Random single digit |
+
+#### Phone number
+
+| Attribute      | Description         |
+| -------------- | ------------------- |
+| `cell_number`  | Random cell number  |
+| `phone_number` | Random phone number |
 
 ## Links
 
