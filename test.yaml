@@ -1,19 +1,33 @@
-- method: Get
-  url: /users/{id:number}
-  response:
-    status: 200
-    body:
-      id: $id
-      name: $fake.name
-      profession: $fake.profession
-- method: Get
-  url: /faupi/router/{name}/rate-{rate:number}
-  response:
-    status: 200
-    body:
-      message: It actually works, $name! Thanks for $rate/10. 
-      rate: $rate
-- method: Get
-  url: /empty
-  response:
-    delay: 10000
+templates:
+  user:
+    name:
+      value: $fake.name
+      type: string
+    age:
+      value: "42"
+      type: number
+  template1:
+    - value: $fake.word
+      type: string
+    - value: $fake.word
+      type: string
+specs:
+  - method: Get
+    url: /users/{id:number}
+    response:
+      status: 200
+      body:
+        id: $id
+        name: $fake.name
+        profession: $fake.profession
+  - method: Get
+    url: /faupi/router/{name}/rate-{rate:number}
+    response:
+      status: 200
+      body:
+        message: It actually works, $name! Thanks for $rate/10. 
+        rate: $rate
+  - method: Get
+    url: /empty
+    response:
+      delay: 10000

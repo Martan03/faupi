@@ -11,18 +11,18 @@ use crate::{
         method::Method,
         response::Response,
         spec::Spec,
-        specs_struct::Specs,
+        mock_config::MockConfig,
         status_code::StatusCode,
     },
 };
 
 impl Import {
-    pub fn oas3_to_specs(oas: OpenApiV3Spec) -> Result<Specs> {
+    pub fn oas3_to_specs(oas: OpenApiV3Spec) -> Result<MockConfig> {
         let Some(paths) = oas.paths.clone() else {
-            return Ok(Specs::default());
+            return Ok(MockConfig::default());
         };
 
-        let mut specs = Specs::default();
+        let mut specs = MockConfig::default();
         for (url, item) in paths.iter() {
             for (method, op) in item.methods() {
                 let res = Self::oper_to_res(op, &oas)?;
@@ -31,7 +31,7 @@ impl Import {
                     url: url.clone(),
                     response: res,
                 };
-                specs.0.push(spec);
+                specs.specs.push(spec);
             }
         }
 

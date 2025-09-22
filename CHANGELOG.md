@@ -1,5 +1,9 @@
 # faupi changelog
 
+## v0.3.0
+
+### Features
+
 ## v0.2.0 - Lord of the Fakes
 
 ### Features

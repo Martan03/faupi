@@ -7,7 +7,7 @@ use crate::{
     args::{missing_param_err, next_arg},
     error::{Error, Result},
     server::{router::Router, server_struct::Server},
-    specs::{specs_struct::Specs, watch_specs},
+    specs::{mock_config::MockConfig, watch_specs},
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -46,7 +46,7 @@ impl Serve {
     }
 
     pub async fn run(&self) -> Result<()> {
-        let specs = Specs::load(&self.file)?;
+        let specs = MockConfig::load(&self.file)?;
         let router = Arc::new(RwLock::new(Router::new(specs)?));
 
         let _watcher = watch_specs(&self.file, router.clone())?;

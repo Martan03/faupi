@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     fs::File,
     io::{BufReader, BufWriter},
     path::Path,
@@ -10,13 +11,18 @@ use serde::{Deserialize, Serialize};
 use crate::{
     args::import::Import,
     error::{Error, Result},
-    specs::spec::Spec,
+    specs::{spec::Spec, template::template_value::TemplateValue},
 };
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct Specs(pub Vec<Spec>);
+pub struct MockConfig {
+    #[serde(default)]
+    pub templates: HashMap<String, TemplateValue>,
+    #[serde(default)]
+    pub specs: Vec<Spec>,
+}
 
-impl Specs {
+impl MockConfig {
     /// Loads specs from the given file based on the file extension.
     /// # Supported extensions:
     /// - `.yaml`, `.yml`
@@ -66,7 +72,7 @@ impl Specs {
     }
 }
 
-impl TryFrom<OpenApiV3Spec> for Specs {
+impl TryFrom<OpenApiV3Spec> for MockConfig {
     type Error = Error;
 
     fn try_from(

@@ -11,7 +11,7 @@ use crate::{
         router_node::RouterNode,
         url::{parser::UrlParser, var::UrlVar},
     },
-    specs::{response::Response, spec::Spec, specs_struct::Specs},
+    specs::{response::Response, spec::Spec, mock_config::MockConfig},
 };
 
 pub type SharedRouter = Arc<RwLock<Router>>;
@@ -24,9 +24,9 @@ pub struct Router {
 
 impl Router {
     /// Creates new Router tree based on the given specification
-    pub fn new(specs: Specs) -> Result<Self> {
+    pub fn new(specs: MockConfig) -> Result<Self> {
         let mut router = Self::default();
-        for spec in specs.0 {
+        for spec in specs.specs {
             router.insert(spec)?;
         }
         Ok(router)
