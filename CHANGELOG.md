@@ -4,6 +4,8 @@
 
 ### Features
 
+- Templates in specification file
+
 ## v0.2.0 - Lord of the Fakes
 
 ### Features
