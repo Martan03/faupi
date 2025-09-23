@@ -1,25 +1,25 @@
 templates:
-  user:
+  template1:
+    test: true
+    unsigned: 123
+    signed: -126
+    float: 3.14
     name:
       value: $fake.name
       type: string
     age:
       value: "42"
       type: number
-  template1:
-    - value: $fake.word
-      type: string
-    - value: $fake.word
-      type: string
+  user:
+    id: $id
+    name: $fake.name
+    profession: $fake.profession
 specs:
   - method: Get
     url: /users/{id:number}
     response:
       status: 200
-      body:
-        id: $id
-        name: $fake.name
-        profession: $fake.profession
+      body: $ref.user
   - method: Get
     url: /faupi/router/{name}/rate-{rate:number}
     response:

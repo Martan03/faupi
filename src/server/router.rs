@@ -11,7 +11,10 @@ use crate::{
         router_node::RouterNode,
         url::{parser::UrlParser, var::UrlVar},
     },
-    specs::{response::Response, spec::Spec, mock_config::MockConfig},
+    specs::{
+        body::body::Body, mock_config::MockConfig, response::Response,
+        spec::Spec,
+    },
 };
 
 pub type SharedRouter = Arc<RwLock<Router>>;
@@ -20,6 +23,7 @@ pub type SharedRouter = Arc<RwLock<Router>>;
 pub struct Router {
     pub roots: HashMap<Method, RouterNode>,
     pub not_found: HyperRes,
+    pub templates: HashMap<String, Body>,
 }
 
 impl Router {
@@ -29,6 +33,7 @@ impl Router {
         for spec in specs.specs {
             router.insert(spec)?;
         }
+        router.templates = specs.templates;
         Ok(router)
     }
 
@@ -69,6 +74,7 @@ impl Default for Router {
                 .status(StatusCode::NOT_FOUND)
                 .body(Full::new(Bytes::from("Not found")))
                 .unwrap(),
+            templates: Default::default(),
         }
     }
 }

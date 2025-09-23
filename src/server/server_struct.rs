@@ -66,7 +66,7 @@ impl Server {
                 sleep(Duration::from_millis(delay)).await;
             }
 
-            let hyper_res = res.to_http_response(&vars)?;
+            let hyper_res = res.to_http_response(&vars, &router.templates)?;
             debug!("Request: {} {} -> response {}", method, url, res.status.0);
             Ok(hyper_res)
         } else {

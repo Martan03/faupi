@@ -11,13 +11,13 @@ use serde::{Deserialize, Serialize};
 use crate::{
     args::import::Import,
     error::{Error, Result},
-    specs::{spec::Spec, template::template_value::TemplateValue},
+    specs::{body::body::Body, spec::Spec},
 };
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct MockConfig {
     #[serde(default)]
-    pub templates: HashMap<String, TemplateValue>,
+    pub templates: HashMap<String, Body>,
     #[serde(default)]
     pub specs: Vec<Spec>,
 }

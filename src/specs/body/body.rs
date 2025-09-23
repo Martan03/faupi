@@ -36,6 +36,7 @@ impl Body {
     pub fn resolve(
         &self,
         vars: &HashMap<String, UrlVar>,
+        templates: &HashMap<String, Body>,
     ) -> serde_yaml::Value {
         match self {
             Body::Null => serde_yaml::Value::Null,
@@ -45,24 +46,27 @@ impl Body {
             Body::Sequence(items) => {
                 let mut new_items = vec![];
                 for item in items {
-                    new_items.push(item.resolve(vars));
+                    new_items.push(item.resolve(vars, templates));
                 }
                 serde_yaml::Value::Sequence(new_items)
             }
             Body::Mapping(mapping) => {
                 let mut new_map = serde_yaml::Mapping::new();
                 for (k, v) in mapping.map.iter() {
-                    new_map.insert(k.resolve(vars), v.resolve(vars));
+                    new_map.insert(
+                        k.resolve(vars, templates),
+                        v.resolve(vars, templates),
+                    );
                 }
                 serde_yaml::Value::Mapping(new_map)
             }
             Body::Tagged(tagged) => serde_yaml::Value::Tagged(Box::new(
                 serde_yaml::value::TaggedValue {
                     tag: tagged.tag.clone(),
-                    value: tagged.value.resolve(vars),
+                    value: tagged.value.resolve(vars, templates),
                 },
             )),
-            Body::Dynamic(dynamic) => dynamic.resolve(vars),
+            Body::Dynamic(dynamic) => dynamic.resolve(vars, templates),
         }
     }
 
@@ -160,6 +164,7 @@ impl Body {
         let attr = Self::read_ident(chars)?;
         match ident.as_str() {
             "fake" => Ok((ident, DynamicValue::Fake(attr))),
+            "ref" => Ok((ident, DynamicValue::Ref(attr))),
             _ => Err(UrlError::UnknownObject(ident).into()),
         }
     }

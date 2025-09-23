@@ -24,8 +24,9 @@ impl Response {
     pub fn to_http_response(
         &self,
         vars: &HashMap<String, UrlVar>,
+        templates: &HashMap<String, Body>,
     ) -> Result<HyperRes> {
-        let body = self.expand_vars(&vars);
+        let body = self.expand_vars(&vars, templates);
         let body = serde_json::to_string(&body).unwrap_or("".into());
 
         hyper::Response::builder()
@@ -38,7 +39,8 @@ impl Response {
     pub fn expand_vars(
         &self,
         vars: &HashMap<String, UrlVar>,
+        templates: &HashMap<String, Body>,
     ) -> serde_yaml::Value {
-        self.body.resolve(vars)
+        self.body.resolve(vars, templates)
     }
 }

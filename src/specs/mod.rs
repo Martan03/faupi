@@ -14,7 +14,6 @@ pub mod mock_config;
 pub mod response;
 pub mod spec;
 pub mod status_code;
-pub mod template;
 
 pub fn watch_specs(
     path: impl AsRef<Path>,
