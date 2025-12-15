@@ -9,9 +9,9 @@ use crate::{
     specs::{
         body::{Mapping, body::Body},
         method::Method,
+        mock_config::MockConfig,
         response::Response,
         spec::Spec,
-        mock_config::MockConfig,
         status_code::StatusCode,
     },
 };
@@ -29,6 +29,8 @@ impl Import {
                 let spec = Spec {
                     method: Method::try_from(method)?,
                     url: url.clone(),
+                    // TODO
+                    request: None,
                     response: res,
                 };
                 specs.specs.push(spec);

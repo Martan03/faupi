@@ -28,11 +28,15 @@ impl MockConfig {
     /// - `.yaml`, `.yml`
     /// - `.json`
     pub fn load(file: impl AsRef<Path>) -> Result<Self> {
-        match file.as_ref().extension().and_then(|s| s.to_str()) {
-            Some("yaml") | Some("yml") => Self::from_yaml(file),
-            Some("json") => Self::from_json(file),
-            _ => Err(Error::Msg("Unsupported file type".into())),
+        let config = match file.as_ref().extension().and_then(|s| s.to_str()) {
+            Some("yaml") | Some("yml") => Self::from_yaml(file)?,
+            Some("json") => Self::from_json(file)?,
+            _ => return Err(Error::Msg("Unsupported file type".into())),
+        };
+        for spec in config.specs.iter() {
+            spec.validate()?;
         }
+        Ok(config)
     }
 
     /// Saves specs to the given file based on the file extension.
