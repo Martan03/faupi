@@ -11,6 +11,7 @@ use crate::{
     specs::body::{
         Mapping, Sequence, TaggedValue,
         dynamic::{Dynamic, DynamicValue},
+        type_constraint::TypeConstraint,
     },
 };
 
@@ -26,6 +27,7 @@ pub enum Body {
     Mapping(Mapping),
     Tagged(Box<TaggedValue>),
     Dynamic(Dynamic),
+    Constraint(TypeConstraint),
 }
 
 impl Body {
@@ -67,6 +69,78 @@ impl Body {
                 },
             )),
             Body::Dynamic(dynamic) => dynamic.resolve(vars, templates),
+            Body::Constraint(constraint) => {
+                if let Some(val) = &constraint.value {
+                    val.resolve(vars, templates)
+                } else {
+                    serde_yaml::Value::Null
+                }
+            }
+        }
+    }
+
+    pub fn validate(
+        &self,
+        inc: &serde_yaml::Value,
+        vars: &HashMap<String, UrlVar>,
+        templates: &HashMap<String, Body>,
+    ) -> bool {
+        match self {
+            Body::Sequence(items) => {
+                let serde_yaml::Value::Sequence(inc_seq) = inc else {
+                    return false;
+                };
+
+                if items.len() != inc_seq.len() {
+                    return false;
+                }
+                items
+                    .iter()
+                    .zip(inc_seq.iter())
+                    .all(|(e, i)| e.validate(i, vars, templates))
+            }
+            Body::Mapping(mapping) => {
+                let serde_yaml::Value::Mapping(inc_map) = inc else {
+                    return false;
+                };
+
+                for (k, exp_v) in mapping.map.iter() {
+                    let key = k.resolve(vars, templates);
+                    if let Some(inc_v) = inc_map.get(&key) {
+                        if !exp_v.validate(inc_v, vars, templates) {
+                            return false;
+                        }
+                    } else {
+                        return false;
+                    }
+                }
+                true
+            }
+            Body::Dynamic(dynamic) => dynamic.validate(inc, vars, templates),
+            Body::Constraint(constraint) => {
+                let same_type = match (constraint.exp_type.as_str(), inc) {
+                    ("string", serde_yaml::Value::String(_)) => true,
+                    ("number", serde_yaml::Value::Number(_)) => true,
+                    ("boolean", serde_yaml::Value::Bool(_)) => true,
+                    ("object", serde_yaml::Value::Mapping(_)) => true,
+                    ("array", serde_yaml::Value::Sequence(_)) => true,
+                    ("any", _) => true,
+                    _ => false,
+                };
+
+                if !same_type {
+                    return false;
+                }
+
+                if let Some(val) = &constraint.value {
+                    return val.validate(inc, vars, templates);
+                }
+                true
+            }
+            _ => {
+                let resolved = self.resolve(vars, templates);
+                inc == &resolved
+            }
         }
     }
 
@@ -92,6 +166,24 @@ impl TryFrom<serde_yaml::Value> for Body {
                 Self::Sequence(vals)
             }
             serde_yaml::Value::Mapping(map) => {
+                let is_constraint = map.len() <= 2
+                    && map.keys().all(|k| {
+                        k.as_str() == Some("type")
+                            || k.as_str() == Some("value")
+                    });
+                if is_constraint {
+                    let type_val = map.get(&str_value("type")).unwrap();
+                    let typ = type_val.as_str().unwrap_or("any");
+
+                    let value = match map.get(&str_value("value")) {
+                        Some(v) => Some(Box::new(Self::try_from(v.clone())?)),
+                        None => None,
+                    };
+                    return Ok(Self::Constraint(TypeConstraint::new(
+                        typ, value,
+                    )));
+                }
+
                 let mut new_map = Mapping::new();
                 for (k, v) in map {
                     new_map.insert(Self::try_from(k)?, Self::try_from(v)?);
@@ -227,6 +319,15 @@ impl From<&Body> for serde_yaml::Value {
             Body::Dynamic(dynamic) => {
                 serde_yaml::Value::String(dynamic.to_string())
             }
+            Body::Constraint(constraint) => {
+                let mut map = serde_yaml::Mapping::new();
+                map.insert(str_value("type"), str_value(&constraint.exp_type));
+                if let Some(val) = &constraint.value {
+                    map.insert(str_value("value"), Self::from(val.as_ref()));
+                }
+
+                serde_yaml::Value::Mapping(map)
+            }
         }
     }
 }
@@ -263,8 +364,13 @@ impl Hash for Body {
             Body::Mapping(v) => v.hash(state),
             Body::Tagged(v) => v.hash(state),
             Body::Dynamic(v) => v.hash(state),
+            Body::Constraint(v) => v.hash(state),
         }
     }
 }
 
 impl Eq for Body {}
+
+fn str_value(value: &str) -> serde_yaml::Value {
+    serde_yaml::Value::String(value.to_string())
+}

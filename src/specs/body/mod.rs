@@ -7,6 +7,7 @@ use crate::specs::body::body::Body;
 pub mod body;
 pub mod dynamic;
 pub mod fake;
+pub mod type_constraint;
 
 pub type Sequence = Vec<Body>;
 

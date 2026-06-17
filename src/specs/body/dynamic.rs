@@ -62,7 +62,15 @@ impl Dynamic {
                 }
                 DynamicValue::Ref(ref_name) => {
                     if let Some(body) = templates.get(ref_name) {
-                        return body.resolve(vars, templates);
+                        let resolved = body.resolve(vars, templates);
+                        if let Some(s) = resolved.as_str() {
+                            res.push_str(s);
+                        } else {
+                            res.push_str(
+                                &serde_yaml::to_string(&resolved)
+                                    .unwrap_or_default(),
+                            );
+                        }
                     } else {
                         warn!("Template `$ref.{ref_name} not defined.");
                     }
@@ -70,6 +78,27 @@ impl Dynamic {
             }
         }
         serde_yaml::Value::String(res)
+    }
+
+    pub fn validate(
+        &self,
+        inc: &serde_yaml::Value,
+        vars: &HashMap<String, UrlVar>,
+        templates: &HashMap<String, Body>,
+    ) -> bool {
+        if self.values.len() == 1
+            && let DynamicValue::Ref(ref_name) = &self.values[0]
+        {
+            if let Some(template) = templates.get(ref_name) {
+                return template.validate(inc, vars, templates);
+            } else {
+                warn!("Template `$ref.{ref_name} not defined.");
+                return false;
+            }
+        }
+
+        let resolved = self.resolve(vars, templates);
+        inc == &resolved
     }
 }
 

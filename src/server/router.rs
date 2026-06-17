@@ -8,13 +8,11 @@ use crate::{
     error::Result,
     server::{
         HyperRes,
+        endpoint::Endpoint,
         router_node::RouterNode,
         url::{parser::UrlParser, var::UrlVar},
     },
-    specs::{
-        body::body::Body, mock_config::MockConfig, response::Response,
-        spec::Spec,
-    },
+    specs::{body::body::Body, mock_config::MockConfig, spec::Spec},
 };
 
 pub type SharedRouter = Arc<RwLock<Router>>;
@@ -46,7 +44,9 @@ impl Router {
         let mut chars = spec.url.chars();
         let mut parser = UrlParser::new(&mut chars);
         _ = parser.next()?;
-        root.insert(parser, spec.response)?;
+
+        let ep = Endpoint::new(spec.response).request(spec.request);
+        root.insert(parser, ep)?;
         Ok(())
     }
 
@@ -56,7 +56,7 @@ impl Router {
         method: &Method,
         url: &str,
         vars: &mut HashMap<String, UrlVar>,
-    ) -> Option<&Response> {
+    ) -> Option<&Endpoint> {
         let mut url_parts = url.split("/");
         url_parts.next();
         if let Some(root) = self.roots.get(method) {
