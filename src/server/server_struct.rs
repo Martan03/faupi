@@ -4,6 +4,10 @@ use http_body_util::{BodyExt, Full};
 use hyper::{
     Request, Response, StatusCode,
     body::{Bytes, Incoming},
+    header::{
+        ACCESS_CONTROL_ALLOW_HEADERS, ACCESS_CONTROL_ALLOW_METHODS,
+        ACCESS_CONTROL_ALLOW_ORIGIN, HeaderValue,
+    },
     server::conn::http1,
     service::service_fn,
 };
@@ -20,14 +24,20 @@ use crate::{
 pub struct Server {
     listener: TcpListener,
     router: SharedRouter,
+    cors: bool,
 }
 
 impl Server {
     /// Creates new server on the given address
-    pub async fn new(addr: (&str, u16), router: SharedRouter) -> Result<Self> {
+    pub async fn new(
+        addr: (&str, u16),
+        router: SharedRouter,
+        cors: bool,
+    ) -> Result<Self> {
         Ok(Self {
             listener: TcpListener::bind(addr).await?,
             router,
+            cors,
         })
     }
 
@@ -40,6 +50,7 @@ impl Server {
             .unwrap_or("-".to_owned());
         info!("Server started on {addr}.");
 
+        let cors = self.cors;
         loop {
             let (tcp, _) = self.listener.accept().await?;
             let router = self.router.clone();
@@ -48,7 +59,7 @@ impl Server {
                 let conn = http1::Builder::new().serve_connection(
                     TokioIo::new(tcp),
                     service_fn(move |req| {
-                        Server::handle_request(req, router.clone())
+                        Server::handle_request(req, router.clone(), cors)
                     }),
                 );
                 if let Err(e) = conn.await {
@@ -62,7 +73,17 @@ impl Server {
     async fn handle_request(
         req: Request<Incoming>,
         router: SharedRouter,
+        cors: bool,
     ) -> Result<Response<Full<Bytes>>> {
+        if cors && req.method() == hyper::Method::OPTIONS {
+            let mut res = hyper::Response::builder()
+                .status(StatusCode::OK)
+                .body(Full::new(Bytes::new()))
+                .unwrap();
+            Self::inject_cors(res.headers_mut());
+            return Ok(res);
+        }
+
         let router = router.read().await;
         let mut vars = HashMap::new();
 
@@ -72,7 +93,7 @@ impl Server {
             router.find(&method, &url, &mut vars)
         else {
             info!("Request {} {} -> response 404.", method, url);
-            return Ok(router.not_found.clone());
+            return Ok(Self::finalize_res(router.not_found.clone(), cors));
         };
 
         let response = response.get();
@@ -86,7 +107,7 @@ impl Server {
                     .await
         {
             info!("Request {} {} -> Failed body validation.", method, url);
-            return Ok(res);
+            return Ok(Self::finalize_res(res, cors));
         }
 
         let hyper_res = response.to_http_response(&vars, &router.templates)?;
@@ -94,7 +115,7 @@ impl Server {
             "Request: {} {} -> response {}",
             method, url, response.status.0
         );
-        Ok(hyper_res)
+        Ok(Self::finalize_res(hyper_res, cors))
     }
 
     async fn validate_req(
@@ -134,5 +155,34 @@ impl Server {
             return Err(bad_req);
         }
         Ok(())
+    }
+
+    /// Finalizes response - adds CORS headers when configured
+    fn finalize_res(
+        mut res: Response<Full<Bytes>>,
+        cors: bool,
+    ) -> Response<Full<Bytes>> {
+        if cors {
+            Self::inject_cors(res.headers_mut());
+        }
+        res
+    }
+
+    /// Helper function to inject CORS headers into a response
+    fn inject_cors(headers: &mut hyper::HeaderMap) {
+        headers.insert(
+            ACCESS_CONTROL_ALLOW_ORIGIN,
+            HeaderValue::from_static("*"),
+        );
+        headers.insert(
+            ACCESS_CONTROL_ALLOW_METHODS,
+            HeaderValue::from_static(
+                "GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD",
+            ),
+        );
+        headers.insert(
+            ACCESS_CONTROL_ALLOW_HEADERS,
+            HeaderValue::from_static("*"),
+        );
     }
 }

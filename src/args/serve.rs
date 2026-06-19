@@ -18,6 +18,8 @@ pub struct Serve {
     pub server: String,
     // API mock server port
     pub port: u16,
+    // Whether allow CORS
+    pub cors: bool,
 }
 
 #[derive(Debug, Default)]
@@ -25,6 +27,7 @@ struct ServeParser {
     file: Option<PathBuf>,
     server: Option<String>,
     port: Option<u16>,
+    cors: Option<bool>,
 }
 
 impl Serve {
@@ -35,6 +38,10 @@ impl Serve {
                 "-s" | "--spec" => parsed.file = Some(next_arg(args)?),
                 "-a" | "--address" => parsed.server = Some(next_arg(args)?),
                 "-p" | "--port" => parsed.port = Some(next_arg(args)?),
+                "-c" | "--cors" => {
+                    args.next();
+                    parsed.cors = Some(true)
+                }
                 "--" => {
                     args.next();
                     break;
@@ -51,7 +58,8 @@ impl Serve {
 
         let _watcher = watch_specs(&self.file, router.clone())?;
 
-        let server = Server::new((&self.server, self.port), router).await?;
+        let server =
+            Server::new((&self.server, self.port), router, self.cors).await?;
         server.run().await
     }
 }
@@ -64,6 +72,7 @@ impl TryFrom<ServeParser> for Serve {
             file: value.file.ok_or_else(|| missing_param_err("--spec"))?,
             server: value.server.unwrap_or("127.0.0.1".into()),
             port: value.port.unwrap_or(3000),
+            cors: value.cors.unwrap_or_default(),
         })
     }
 }

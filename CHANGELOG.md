@@ -8,6 +8,7 @@
 - Expected request type and field values
 - Open API importer request support
 - Multiple endpoint response support with pick strategy (random or cycle)
+- Optional CORS support
 
 ### Breaking Changes
 
