@@ -1,14 +1,14 @@
-use crate::specs::{body::body::Body, response::Response};
+use crate::specs::{body::body::Body, response::EndpointResponse};
 
 #[derive(Debug)]
 pub struct Endpoint {
     pub request: Option<Body>,
-    pub response: Response,
+    pub response: EndpointResponse,
 }
 
 impl Endpoint {
     /// Creates new endpoint containing given response and empty request.
-    pub fn new(response: Response) -> Self {
+    pub fn new(response: EndpointResponse) -> Self {
         Self {
             request: None,
             response,

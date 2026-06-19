@@ -10,7 +10,7 @@ use crate::{
         body::{Mapping, body::Body, type_constraint::TypeConstraint},
         method::Method,
         mock_config::MockConfig,
-        response::Response,
+        response::{EndpointResponse, Response},
         spec::Spec,
         status_code::StatusCode,
     },
@@ -32,7 +32,7 @@ impl Import {
                     method: Method::try_from(method)?,
                     url: url.clone(),
                     request: req,
-                    response: res,
+                    response: EndpointResponse::Single(res),
                 };
                 specs.specs.push(spec);
             }

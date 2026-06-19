@@ -1,5 +1,4 @@
 # TODO
 
-- Multiple response support (fixed selection, random, cycle)
-- Generic object template (check template names ident)
+- Add fixed response when MultiResponse?
 - UI?

@@ -33,6 +33,21 @@ impl MockConfig {
             Some("json") => Self::from_json(file)?,
             _ => return Err(Error::Msg("Unsupported file type".into())),
         };
+
+        for key in config.templates.keys() {
+            let mut chars = key.chars();
+            let first = chars.next().unwrap_or_default();
+            if !(first.is_ascii_alphabetic() || first == '_')
+                || !chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+            {
+                return Err(Error::Msg(format!(
+                    "Invalid template name '{}'. Templates can only contain \
+                    alphanumeric characters and underscores, and must start \
+                    with a letter or underscore.",
+                    key
+                )));
+            }
+        }
         for spec in config.specs.iter() {
             spec.validate()?;
         }

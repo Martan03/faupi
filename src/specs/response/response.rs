@@ -11,6 +11,7 @@ use crate::{
 };
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Response {
     #[serde(default)]
     pub status: StatusCode,

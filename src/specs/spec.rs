@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::{Error, Result},
-    specs::{body::body::Body, method::Method, response::Response},
+    specs::{body::body::Body, method::Method, response::EndpointResponse},
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -12,7 +12,7 @@ pub struct Spec {
     #[serde(default)]
     pub request: Option<Body>,
     #[serde(default)]
-    pub response: Response,
+    pub response: EndpointResponse,
 }
 
 impl Spec {

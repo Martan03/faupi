@@ -75,6 +75,7 @@ impl Server {
             return Ok(router.not_found.clone());
         };
 
+        let response = response.get();
         if let Some(delay) = response.delay {
             sleep(Duration::from_millis(delay)).await;
         }
