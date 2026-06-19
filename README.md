@@ -3,14 +3,17 @@
 Blazingly fast API Mock Server written in Rust.
 
 ## Table of Contents
+
 - [Installation](#installation)
 - [Usage](#usage)
+- [Import OpenAPI specification](#import-openapi-specification)
 - [Specification](#specification)
     - [Specification URL](#specification-url)
+    - [Specification request](#specification-request)
     - [Specification response](#specification-response)
-        - [Specification response body](#specification-response-body)
+        - [Specification request/response body](#specification-requestresponse-body)
     - [Specification example](#specification-example)
-- [Import OpenAPI specification](#import-openapi-specification)
+    - [Fake object](#fake-object)
 - [Links](#links)
 
 ## Installation
@@ -19,6 +22,7 @@ Currently there's no other way of installing then building it yourself. You need
 to have Rust Toolchain installed (see
 [rust installation page](https://www.rust-lang.org/tools/install)). When you
 have the Rust Toochain, you can build the project with `cargo`:
+
 ```bash
 cargo build -r
 ```
@@ -27,45 +31,59 @@ After it's done compiling, the binary will be `target/release/faupi`.
 
 ## Usage
 
-> Note: In all the examples, the path to the project binary is substituted by 
+> [!NOTE]
+> In all the examples, the path to the project binary is substituted by
 > `faupi`.
 
 To run the actual Mock API server, you can start it by running:
+
 ```bash
 faupi serve -s specs.yaml
-faupi serve -s specs.yaml -a 123.345.67.89 -p 1234
+faupi serve -s specs.yaml -a 123.345.67.89 -p 1234 --cors
 ```
 
 where the `specs.yaml` contains the specification of the Mock API. More about
-that in the [specification section](#specification). The second command 
-showcases running the server on custom address and port.
+that in the [specification section](#specification). The second command
+showcases running the server on custom address and port and with enabled CORS.
 
 More details about all the functionality can be found in the help:
+
 ```bash
 faupi -h
 ```
 
 ## Import OpenAPI specification
 
-> Note: this only supports basic OpenAPI specification files
+> [!WARNING]
+> This only supports basic OpenAPI specification files
 
-If you already have an OpenAPI specification file, you can import it with 
-`faupi` and convert it to the `faupi` specification file. You can do it like 
+If you already have an OpenAPI specification file, you can import it with
+`faupi` and convert it to the `faupi` specification file. You can do it like
 this:
+
 ```bash
 faupi import -i docs.jsonopenapi -o faupi-spec.yaml
 ```
 
 ## Specification
 
-Specification is either `.yaml` or `.json` file. It contains list of endpoint
-specifications. Each endpoint specification sets what the API Mock server
-should respond on each URL with different HTTP methods. The endpoint specification contains:
+Specification is either `.yaml` or `.json` file. It contains list of templates
+and list of endpoint specifications. Templates allow reusing a response or
+request. Each endpoint specification sets what the API Mock server should
+respond on each URL with different HTTP methods.
+
+Each template has name and then any body value. You can find out more about
+the body in the
+[specification request/response body](#specification-requestresponse-body).
+
+The endpoint specification contains:
+
 - HTTP method (`method`)
-    - `Get`, `Head`, `Post`, `Put`, `Delete`, `Connect`, `Options`, `Trace`, 
-    `Path`
+    - `Get`, `Head`, `Post`, `Put`, `Delete`, `Connect`, `Options`, `Trace`,
+      `Path`
 - Endpoint URL (`url`)
     - See [specification URL](#specification-url).
+- Request (`request`) - optional + only POST, PUT and PATCH methods
 - Response (`response`) - optional
     - See [specification response](#specification-response).
 
@@ -77,29 +95,44 @@ This URL has hardcoded ID, which is not ideal for API testing. For this purpose,
 
 To add parameter to the URL, you have to enclose the parameter definition in the
 curly brackets. Variable definition consists of name and optional type - type
-defaults to `string`. If we parametrize the mentioned URL, we get 
+defaults to `string`. If we parametrize the mentioned URL, we get
 `/api/example/{id: number}`.
 
 In the above example, we used the type `number`, which suits the ID better.
 Currently supported URL parameter types are:
+
 - `string`
 - `number`
+
+### Specification request
+
+Specification request validates the incoming request. This is optional and can
+be used only with POST, PUT and PATCH methods. The `request` field directly
+contains the body definition - check out
+[specification request/response body](#specification-requestresponse-body) to
+find out more.
+
+Validation of the incoming request compares type and value of each field to the
+specification request. If type or value is not set in the specification
+request, it is skipped. If the validation is not successful, the server returns
+400 Bad Request.
 
 ### Specification response
 
 Specification response corresponds to the HTTP response returned by the API
 Mock server. It contains:
+
 - HTTP response status (`status`) - defaults to `200`.
     - 200 = OK, 404 = Not Found,...
 - HTTP response delay (`delay`) - defaults to no delay.
     - Time the server waits before sending response (in milliseconds).
 - HTTP response body (`body`) - defaults to `null`.
-    - See [specification response body](#specification-response-body).
+    - See [specification response body](#specification-requestresponse-body).
 
-#### Specification response body
+### Specification request/response body
 
-To be able to support more dynamic responses, response body supports variables.
-Currently only way to set the variables is from the URL parameters. 
+To be able to support more dynamic requests/responses, body supports variables.
+Currently only way to set the variables is from the URL parameters.
 
 To use a variable inside of a body value, you can add `$` followed by the
 variable name (such as `$name`). To prevent ambiguity, you can also wrap the
@@ -112,23 +145,33 @@ attributes to generate random value, such as first name, last name, profesion
 and more. You use it as a normal variable with `$` - `$fake.name`. To see
 all the `fake` object attributes, visit [fake object section](#fake-object).
 
-### Specification example 
+You can also use template in the body by using `ref` variable. If you want to
+get the template named `user`, you can again access it as `$ref.user`.
+
+### Specification example
+
 To add API GET endpoint on URL `/api/example/{id:number}`, we can add this
-endpoint specification to out specification file:
+endpoint specification to our specification file. The response can be saved
+as template, which can be later reused.
+
 ```yaml
-- method: Get
-  url: /api/example/{id:number}
-  response:
-    status: 200
-    body:
-      id: $id
-      message: Hope you like faupi!
-      review: $fake.name recommends using it.
+templates:
+    example:
+        id: $id
+        message: Hope you like faupi!
+        review: $fake.name recommends using it.
+specs:
+    - method: Get
+      url: /api/example/{id:number}
+      response:
+          status: 200
+          body: $ref.example
 ```
 
 This endpoint specification returns response with HTTP response status 200 - OK
-and body contains object with attributes `id` and `message`. The `message`
-contains static string, but the `id` gets expanded to the URL `id` parameter 
+and body contains template reference. The template is expanded on request. The
+body then contains object with attributes `id` and `message`. The `message`
+contains static string, but the `id` gets expanded to the URL `id` parameter
 value. For example, when API receives HTTP request with URL `/api/example/36`,
 the response body will contain object with `id` set to `36`.
 

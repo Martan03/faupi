@@ -76,7 +76,10 @@ Blazingly fast API Mock Server written in Rust.
     Mock API server address.
 
   {'y}-p  --port{'_} <port>
-    Mock API server port.",
+    Mock API server port.
+
+  {'y}-c  --cors{'_}
+    Enables CORS support.",
             termal::gradient("Martan03", (0, 220, 255), (175, 80, 255)),
             Self::VERSION_NUMBER
         );
