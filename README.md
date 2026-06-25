@@ -8,10 +8,13 @@ Blazingly fast API Mock Server written in Rust.
 - [Usage](#usage)
 - [Import OpenAPI specification](#import-openapi-specification)
 - [Specification](#specification)
+    - [Templates](#templates)
     - [Specification URL](#specification-url)
     - [Specification request](#specification-request)
     - [Specification response](#specification-response)
-        - [Specification request/response body](#specification-requestresponse-body)
+        - [Single response](#single-response)
+        - [Multiple response](#multiple-response)
+    - [Specification request/response body](#specification-requestresponse-body)
     - [Specification example](#specification-example)
     - [Fake object](#fake-object)
 - [Links](#links)
@@ -44,7 +47,7 @@ faupi serve -s specs.yaml -a 123.345.67.89 -p 1234 --cors
 
 where the `specs.yaml` contains the specification of the Mock API. More about
 that in the [specification section](#specification). The second command
-showcases running the server on custom address and port and with enabled CORS.
+showcases running the server on custom address and port, and with enabled CORS.
 
 More details about all the functionality can be found in the help:
 
@@ -67,16 +70,14 @@ faupi import -i docs.jsonopenapi -o faupi-spec.yaml
 
 ## Specification
 
-Specification is either `.yaml` or `.json` file. It contains list of templates
-and list of endpoint specifications. Templates allow reusing a response or
-request. Each endpoint specification sets what the API Mock server should
-respond on each URL with different HTTP methods.
+Specification is either `.yaml` or `.json` file. The root of the file must
+contain two attributes:
 
-Each template has name and then any body value. You can find out more about
-the body in the
-[specification request/response body](#specification-requestresponse-body).
+- `templates`: A list of reusable body objects (optional).
+- `specs`: A list of endpoint specifications.
 
-The endpoint specification contains:
+Each endpoint specification sets what API Mock server should respond with on
+each URL for different HTTP methods. The endpoint specification contains:
 
 - HTTP method (`method`)
     - `Get`, `Head`, `Post`, `Put`, `Delete`, `Connect`, `Options`, `Trace`,
@@ -87,18 +88,27 @@ The endpoint specification contains:
 - Response (`response`) - optional
     - See [specification response](#specification-response).
 
+### Templates
+
+Templates allow you to define a body structure and reuse it across multiple
+requests or responses.
+
+Template names must contain only alphanumeric characters and underscores, and
+must start with a letter or underscore. You can reference a template anywhere
+in a body by using the `$ref` variable (e.g. `$ref.my_template`).
+
 ### Specification URL
 
-URL in the specification can be normal URL string, such as `/api/example/36`.
-This URL has hardcoded ID, which is not ideal for API testing. For this purpose,
-`faupi` contains option to add parameters into the URL.
+The URL in the specification can be a normal URL string, such as
+`/api/example/36`. This URL has hardcoded ID, which is not ideal for API
+testing. For this purpose, `faupi` contains option to add parameters into the
+URL.
 
-To add parameter to the URL, you have to enclose the parameter definition in the
-curly brackets. Variable definition consists of name and optional type - type
-defaults to `string`. If we parametrize the mentioned URL, we get
-`/api/example/{id: number}`.
+To add parameter to the URL, enclose the parameter definition in the curly
+brackets. A variable definition consists of a name and an optional type
+(defaults to `string`). If we parametrize the mentioned URL, we get
+`/api/example/{id:number}`.
 
-In the above example, we used the type `number`, which suits the ID better.
 Currently supported URL parameter types are:
 
 - `string`
@@ -106,21 +116,33 @@ Currently supported URL parameter types are:
 
 ### Specification request
 
-Specification request validates the incoming request. This is optional and can
-be used only with POST, PUT and PATCH methods. The `request` field directly
-contains the body definition - check out
-[specification request/response body](#specification-requestresponse-body) to
-find out more.
+The specification request validates the incoming request body. This is optional
+and can be used only with POST, PUT and PATCH methods.
 
-Validation of the incoming request compares type and value of each field to the
-specification request. If type or value is not set in the specification
-request, it is skipped. If the validation is not successful, the server returns
-400 Bad Request.
+Validation compares the incoming JSON against your expected schema. You can
+enforce exact values, or use the `type` keyword for structural validation.
+Supported types are `string`, `number`, `boolean`, `array`, `object`, and
+`any`.
+
+```yaml
+request:
+    username: "admin" # Exact value match
+    age:
+        type: number # Type constraint (any number)
+```
+
+If the incoming request does not match the expected structure or values, the
+server automatically returns a `400 Bad Request`.
 
 ### Specification response
 
-Specification response corresponds to the HTTP response returned by the API
-Mock server. It contains:
+The specification response corresponds to the HTTP response returned by the API
+Mock server. `faupi` supports both **single** responses and **multiple**
+responses with picking strategies.
+
+#### Single response
+
+Contains a static response block:
 
 - HTTP response status (`status`) - defaults to `200`.
     - 200 = OK, 404 = Not Found,...
@@ -129,51 +151,74 @@ Mock server. It contains:
 - HTTP response body (`body`) - defaults to `null`.
     - See [specification response body](#specification-requestresponse-body).
 
+#### Multiple response
+
+Allows simulating flaky APIs, state changes, or other cases of endpoint
+changing responses. It requires:
+
+- `strategy`: How to pick the response (`random` or `cycle`).
+- `responses`: An array of response objects (same as in single response).
+
+```yaml
+response:
+    strategy: cycle
+    responses:
+        - status: 202
+          body: "Pending"
+        - status: 200
+          body: "Complete"
+```
+
 ### Specification request/response body
 
-To be able to support more dynamic requests/responses, body supports variables.
-Currently only way to set the variables is from the URL parameters.
+To support dynamic requests/responses, the body supports variables. Currently,
+variables can be populated from URL parameters or fake data generators.
 
-To use a variable inside of a body value, you can add `$` followed by the
-variable name (such as `$name`). To prevent ambiguity, you can also wrap the
-variable name inside of curly brackets (`${name}`) - this way you can chain
-a variable and static string after each other without having to use a space.
+To use a variable inside of a body value, add `$` followed by the variable name
+(e.g. `$name`). To prevent ambiguity, you can also wrap the variable name
+inside of curly brackets (`${name}`) - this way you can chain a variable and
+static string after each other without having to use a space.
 
-`faupi` also supports generating random variable values. It contains a special
-object-like variable - `fake`. You can then use one of the built-in object
-attributes to generate random value, such as first name, last name, profesion
-and more. You use it as a normal variable with `$` - `$fake.name`. To see
-all the `fake` object attributes, visit [fake object section](#fake-object).
-
-You can also use template in the body by using `ref` variable. If you want to
-get the template named `user`, you can again access it as `$ref.user`.
+`faupi` also supports generating random variable values using the special
+`fake` object. You can use built-in attributes to generate random value,
+such as first name, last name, profesion and more. You use it as a normal
+variable with `$` - e.g. `$fake.name`. To see all the `fake` object attributes,
+visit [fake object section](#fake-object).
 
 ### Specification example
 
-To add API GET endpoint on URL `/api/example/{id:number}`, we can add this
-endpoint specification to our specification file. The response can be saved
-as template, which can be later reused.
+This example demonstrates usage of templates, request body validation and
+multiple response strategies combined.
 
 ```yaml
 templates:
-    example:
+    user:
         id: $id
-        message: Hope you like faupi!
-        review: $fake.name recommends using it.
+        name: $fake.name
+        profession: $fake.profession
+
 specs:
     - method: Get
-      url: /api/example/{id:number}
+      url: /api/users/{id:number}
       response:
           status: 200
-          body: $ref.example
-```
+          body: $ref.user
 
-This endpoint specification returns response with HTTP response status 200 - OK
-and body contains template reference. The template is expanded on request. The
-body then contains object with attributes `id` and `message`. The `message`
-contains static string, but the `id` gets expanded to the URL `id` parameter
-value. For example, when API receives HTTP request with URL `/api/example/36`,
-the response body will contain object with `id` set to `36`.
+    - method: Post
+      url: /api/users/{id:number}
+      request:
+          role:
+              type: string
+          age:
+              type: number
+      response:
+          strategy: cycle
+          responses:
+              - status: 202
+                body: "Processing creation..."
+              - status: 201
+                body: "User created!"
+```
 
 ### Fake object
 
