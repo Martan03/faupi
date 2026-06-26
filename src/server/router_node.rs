@@ -2,8 +2,10 @@ use std::{collections::HashMap, str::Split};
 
 use crate::{
     error::Result,
-    server::url::{parser::UrlParser, segment::UrlSegment, var::UrlVar},
-    specs::response::Response,
+    server::{
+        endpoint::Endpoint,
+        url::{parser::UrlParser, segment::UrlSegment, var::UrlVar},
+    },
 };
 
 /// Node in the router tree
@@ -11,24 +13,24 @@ use crate::{
 pub struct RouterNode {
     pub children: HashMap<String, RouterNode>,
     pub dyn_children: Vec<(UrlSegment, RouterNode)>,
-    pub response: Option<Response>,
+    pub endpoint: Option<Endpoint>,
 }
 
 impl RouterNode {
     /// Inserts the given response to the router tree. When this node is a final
     /// node, sets its response, otherwise continues traversing.
-    pub fn insert(&mut self, mut url: UrlParser, res: Response) -> Result<()> {
+    pub fn insert(&mut self, mut url: UrlParser, ep: Endpoint) -> Result<()> {
         let Some(segment) = url.next()? else {
-            self.response = Some(res);
+            self.endpoint = Some(ep);
             return Ok(());
         };
 
         if let Some(s) = segment.get_static() {
             let node = self.children.entry(s.to_owned()).or_default();
-            node.insert(url, res)?;
+            node.insert(url, ep)?;
         } else {
             let mut node = RouterNode::default();
-            node.insert(url, res)?;
+            node.insert(url, ep)?;
             self.dyn_children.push((segment, node));
         }
         Ok(())
@@ -40,9 +42,9 @@ impl RouterNode {
         &self,
         mut url: Split<'_, &str>,
         vars: &mut HashMap<String, UrlVar>,
-    ) -> Option<&Response> {
+    ) -> Option<&Endpoint> {
         let Some(part) = url.next() else {
-            return self.response.as_ref();
+            return self.endpoint.as_ref();
         };
 
         if let Some(node) = self.children.get(part) {

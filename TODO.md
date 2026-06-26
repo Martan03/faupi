@@ -1,5 +1,5 @@
 # TODO
 
-- Multiple response support (fixed selection, random, cycle)
-- Request template
+- Fixed response when MultiResponse?
+- Query parameters and headers - check if header contains a token,...
 - UI?

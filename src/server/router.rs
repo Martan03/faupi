@@ -8,10 +8,11 @@ use crate::{
     error::Result,
     server::{
         HyperRes,
+        endpoint::Endpoint,
         router_node::RouterNode,
         url::{parser::UrlParser, var::UrlVar},
     },
-    specs::{response::Response, spec::Spec, specs_struct::Specs},
+    specs::{body::body::Body, mock_config::MockConfig, spec::Spec},
 };
 
 pub type SharedRouter = Arc<RwLock<Router>>;
@@ -20,15 +21,17 @@ pub type SharedRouter = Arc<RwLock<Router>>;
 pub struct Router {
     pub roots: HashMap<Method, RouterNode>,
     pub not_found: HyperRes,
+    pub templates: HashMap<String, Body>,
 }
 
 impl Router {
     /// Creates new Router tree based on the given specification
-    pub fn new(specs: Specs) -> Result<Self> {
+    pub fn new(specs: MockConfig) -> Result<Self> {
         let mut router = Self::default();
-        for spec in specs.0 {
+        for spec in specs.specs {
             router.insert(spec)?;
         }
+        router.templates = specs.templates;
         Ok(router)
     }
 
@@ -41,7 +44,9 @@ impl Router {
         let mut chars = spec.url.chars();
         let mut parser = UrlParser::new(&mut chars);
         _ = parser.next()?;
-        root.insert(parser, spec.response)?;
+
+        let ep = Endpoint::new(spec.response).request(spec.request);
+        root.insert(parser, ep)?;
         Ok(())
     }
 
@@ -51,7 +56,7 @@ impl Router {
         method: &Method,
         url: &str,
         vars: &mut HashMap<String, UrlVar>,
-    ) -> Option<&Response> {
+    ) -> Option<&Endpoint> {
         let mut url_parts = url.split("/");
         url_parts.next();
         if let Some(root) = self.roots.get(method) {
@@ -69,6 +74,7 @@ impl Default for Router {
                 .status(StatusCode::NOT_FOUND)
                 .body(Full::new(Bytes::from("Not found")))
                 .unwrap(),
+            templates: Default::default(),
         }
     }
 }

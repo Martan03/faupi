@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     fs::File,
     io::{BufReader, BufWriter},
     path::Path,
@@ -10,23 +11,47 @@ use serde::{Deserialize, Serialize};
 use crate::{
     args::import::Import,
     error::{Error, Result},
-    specs::spec::Spec,
+    specs::{body::body::Body, spec::Spec},
 };
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
-pub struct Specs(pub Vec<Spec>);
+pub struct MockConfig {
+    #[serde(default)]
+    pub templates: HashMap<String, Body>,
+    #[serde(default)]
+    pub specs: Vec<Spec>,
+}
 
-impl Specs {
+impl MockConfig {
     /// Loads specs from the given file based on the file extension.
     /// # Supported extensions:
     /// - `.yaml`, `.yml`
     /// - `.json`
     pub fn load(file: impl AsRef<Path>) -> Result<Self> {
-        match file.as_ref().extension().and_then(|s| s.to_str()) {
-            Some("yaml") | Some("yml") => Self::from_yaml(file),
-            Some("json") => Self::from_json(file),
-            _ => Err(Error::Msg("Unsupported file type".into())),
+        let config = match file.as_ref().extension().and_then(|s| s.to_str()) {
+            Some("yaml") | Some("yml") => Self::from_yaml(file)?,
+            Some("json") => Self::from_json(file)?,
+            _ => return Err(Error::Msg("Unsupported file type".into())),
+        };
+
+        for key in config.templates.keys() {
+            let mut chars = key.chars();
+            let first = chars.next().unwrap_or_default();
+            if !(first.is_ascii_alphabetic() || first == '_')
+                || !chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+            {
+                return Err(Error::Msg(format!(
+                    "Invalid template name '{}'. Templates can only contain \
+                    alphanumeric characters and underscores, and must start \
+                    with a letter or underscore.",
+                    key
+                )));
+            }
         }
+        for spec in config.specs.iter() {
+            spec.validate()?;
+        }
+        Ok(config)
     }
 
     /// Saves specs to the given file based on the file extension.
@@ -66,7 +91,7 @@ impl Specs {
     }
 }
 
-impl TryFrom<OpenApiV3Spec> for Specs {
+impl TryFrom<OpenApiV3Spec> for MockConfig {
     type Error = Error;
 
     fn try_from(

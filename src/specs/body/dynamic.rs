@@ -4,7 +4,10 @@ use fake::locales::EN;
 use log::warn;
 use serde_yaml::Value;
 
-use crate::{server::url::var::UrlVar, specs::body::fake::get_fake};
+use crate::{
+    server::url::var::UrlVar,
+    specs::body::{body::Body, fake::get_fake},
+};
 
 #[derive(Debug, PartialEq, PartialOrd, Clone, Hash)]
 pub struct Dynamic {
@@ -16,6 +19,7 @@ pub enum DynamicValue {
     Static(String),
     Var(String),
     Fake(String),
+    Ref(String),
 }
 
 impl Dynamic {
@@ -26,6 +30,7 @@ impl Dynamic {
     pub fn resolve(
         &self,
         vars: &HashMap<String, UrlVar>,
+        templates: &HashMap<String, Body>,
     ) -> serde_yaml::Value {
         if self.values.len() == 1
             && let DynamicValue::Var(ident) = &self.values[0]
@@ -45,19 +50,55 @@ impl Dynamic {
                     if let Some(val) = vars.get(var) {
                         res.push_str(&val.to_string());
                     } else {
-                        warn!("Response variable `${var}` not defined.")
+                        warn!("Response variable `${var}` not defined.");
                     }
                 }
                 DynamicValue::Fake(attr) => {
                     if let Some(val) = get_fake(attr, EN) {
-                        res.push_str(&val.to_string())
+                        res.push_str(&val.to_string());
                     } else {
-                        warn!("Response variable `$fake.{attr}` not defined.")
+                        warn!("Response variable `$fake.{attr}` not defined.");
+                    }
+                }
+                DynamicValue::Ref(ref_name) => {
+                    if let Some(body) = templates.get(ref_name) {
+                        let resolved = body.resolve(vars, templates);
+                        if let Some(s) = resolved.as_str() {
+                            res.push_str(s);
+                        } else {
+                            res.push_str(
+                                &serde_yaml::to_string(&resolved)
+                                    .unwrap_or_default(),
+                            );
+                        }
+                    } else {
+                        warn!("Template `$ref.{ref_name} not defined.");
                     }
                 }
             }
         }
         serde_yaml::Value::String(res)
+    }
+
+    pub fn validate(
+        &self,
+        inc: &serde_yaml::Value,
+        vars: &HashMap<String, UrlVar>,
+        templates: &HashMap<String, Body>,
+    ) -> bool {
+        if self.values.len() == 1
+            && let DynamicValue::Ref(ref_name) = &self.values[0]
+        {
+            if let Some(template) = templates.get(ref_name) {
+                return template.validate(inc, vars, templates);
+            } else {
+                warn!("Template `$ref.{ref_name} not defined.");
+                return false;
+            }
+        }
+
+        let resolved = self.resolve(vars, templates);
+        inc == &resolved
     }
 }
 
@@ -68,6 +109,9 @@ impl Display for Dynamic {
                 DynamicValue::Static(s) => write!(f, "{s}")?,
                 DynamicValue::Var(ident) => write!(f, "${{{ident}}}")?,
                 DynamicValue::Fake(attr) => write!(f, "${{fake.{attr}}}")?,
+                DynamicValue::Ref(ref_name) => {
+                    write!(f, "${{ref.{ref_name}}}")?
+                }
             }
         }
         Ok(())

@@ -5,14 +5,14 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 
 use crate::{
     server::router::{Router, SharedRouter},
-    specs::specs_struct::Specs,
+    specs::mock_config::MockConfig,
 };
 
 pub mod body;
 pub mod method;
+pub mod mock_config;
 pub mod response;
 pub mod spec;
-pub mod specs_struct;
 pub mod status_code;
 
 pub fn watch_specs(
@@ -40,7 +40,7 @@ pub fn watch_specs(
 }
 
 fn reload_specs(file: &Path, router: SharedRouter) {
-    let specs = match Specs::load(file) {
+    let specs = match MockConfig::load(file) {
         Ok(specs) => specs,
         Err(e) => {
             error!("Reloading specification: {e}.");

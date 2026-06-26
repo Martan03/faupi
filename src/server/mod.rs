@@ -1,6 +1,7 @@
 use http_body_util::Full;
 use hyper::body::Bytes;
 
+pub mod endpoint;
 pub mod router;
 pub mod router_node;
 pub mod server_struct;

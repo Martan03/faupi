@@ -10,7 +10,7 @@ use pareg::Pareg;
 use crate::{
     args::{missing_param_err, next_arg},
     error::{Error, Result},
-    specs::specs_struct::Specs,
+    specs::mock_config::MockConfig,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -44,7 +44,7 @@ impl Import {
 
     pub fn run(&self) -> Result<()> {
         let docs = Self::load_openapi(&self.input)?;
-        let specs = Specs::try_from(docs)?;
+        let specs = MockConfig::try_from(docs)?;
         specs.save(&self.output)
     }
 
