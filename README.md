@@ -1,6 +1,4 @@
-# faupi
-
-Blazingly fast API Mock Server written in Rust.
+![faupi - Blazingly fast API Mock Server written in Rust](assets/faupi.png)
 
 ## Table of Contents
 
