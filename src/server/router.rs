@@ -43,7 +43,7 @@ impl Router {
 
         let mut chars = spec.url.chars();
         let mut parser = UrlParser::new(&mut chars);
-        _ = parser.next()?;
+        _ = parser.next_seg()?;
 
         let ep = Endpoint::new(spec.response).request(spec.request);
         root.insert(parser, ep)?;

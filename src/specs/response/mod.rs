@@ -1,4 +1,5 @@
 mod multi_response;
+#[allow(clippy::module_inception)]
 mod response;
 mod strategy;
 

@@ -34,7 +34,7 @@ impl Serve {
     pub fn parse(args: &mut Pareg) -> Result<Serve> {
         let mut parsed = ServeParser::default();
         while let Some(arg) = args.peek() {
-            match arg {
+            match arg.as_str() {
                 "-s" | "--spec" => parsed.file = Some(next_arg(args)?),
                 "-a" | "--address" => parsed.server = Some(next_arg(args)?),
                 "-p" | "--port" => parsed.port = Some(next_arg(args)?),

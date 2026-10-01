@@ -29,7 +29,7 @@ impl Import {
     pub fn parse(args: &mut Pareg) -> Result<Import> {
         let mut parsed = ImportParser::default();
         while let Some(arg) = args.peek() {
-            match arg {
+            match arg.as_str() {
                 "-i" | "--input" => parsed.input = Some(next_arg(args)?),
                 "-o" | "--output" => parsed.output = Some(next_arg(args)?),
                 "--" => {

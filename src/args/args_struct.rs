@@ -21,7 +21,7 @@ impl Args {
         let mut parsed = Self::default();
 
         while let Some(arg) = args.peek() {
-            match arg {
+            match arg.as_str() {
                 "s" | "serve" => {
                     args.next();
                     let serve = Serve::parse(&mut args)?;

@@ -118,15 +118,15 @@ impl Body {
             }
             Body::Dynamic(dynamic) => dynamic.validate(inc, vars, templates),
             Body::Constraint(constraint) => {
-                let same_type = match (constraint.exp_type.as_str(), inc) {
-                    ("string", serde_yaml::Value::String(_)) => true,
-                    ("number", serde_yaml::Value::Number(_)) => true,
-                    ("boolean", serde_yaml::Value::Bool(_)) => true,
-                    ("object", serde_yaml::Value::Mapping(_)) => true,
-                    ("array", serde_yaml::Value::Sequence(_)) => true,
-                    ("any", _) => true,
-                    _ => false,
-                };
+                let same_type = matches!(
+                    (constraint.exp_type.as_str(), inc),
+                    ("string", serde_yaml::Value::String(_))
+                        | ("number", serde_yaml::Value::Number(_))
+                        | ("boolean", serde_yaml::Value::Bool(_))
+                        | ("object", serde_yaml::Value::Mapping(_))
+                        | ("array", serde_yaml::Value::Sequence(_))
+                        | ("any", _)
+                );
 
                 if !same_type {
                     return false;
@@ -172,10 +172,10 @@ impl TryFrom<serde_yaml::Value> for Body {
                             || k.as_str() == Some("value")
                     });
                 if is_constraint {
-                    let type_val = map.get(&str_value("type")).unwrap();
+                    let type_val = map.get(str_value("type")).unwrap();
                     let typ = type_val.as_str().unwrap_or("any");
 
-                    let value = match map.get(&str_value("value")) {
+                    let value = match map.get(str_value("value")) {
                         Some(v) => Some(Box::new(Self::try_from(v.clone())?)),
                         None => None,
                     };
@@ -279,7 +279,7 @@ impl Body {
             ident.push(*c);
             chars.next();
         }
-        return Ok(ident);
+        Ok(ident)
     }
 }
 

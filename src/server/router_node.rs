@@ -20,7 +20,7 @@ impl RouterNode {
     /// Inserts the given response to the router tree. When this node is a final
     /// node, sets its response, otherwise continues traversing.
     pub fn insert(&mut self, mut url: UrlParser, ep: Endpoint) -> Result<()> {
-        let Some(segment) = url.next()? else {
+        let Some(segment) = url.next_seg()? else {
             self.endpoint = Some(ep);
             return Ok(());
         };

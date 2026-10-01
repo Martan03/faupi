@@ -4,6 +4,7 @@ use indexmap::IndexMap;
 
 use crate::specs::body::body::Body;
 
+#[allow(clippy::module_inception)]
 pub mod body;
 pub mod dynamic;
 pub mod fake;

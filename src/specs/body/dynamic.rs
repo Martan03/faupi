@@ -31,15 +31,11 @@ impl Dynamic {
         &self,
         vars: &HashMap<String, UrlVar>,
         templates: &HashMap<String, Body>,
-    ) -> serde_yaml::Value {
+    ) -> Value {
         if self.values.len() == 1
-            && let DynamicValue::Var(ident) = &self.values[0]
-            && let Some(var) = vars.get(ident)
+            && let Some(val) = self.handle_single(vars, templates)
         {
-            return match var {
-                UrlVar::String(s) => Value::String(s.clone()),
-                UrlVar::Number(n) => Value::Number((*n).into()),
-            };
+            return val;
         }
 
         let mut res = String::new();
@@ -99,6 +95,35 @@ impl Dynamic {
 
         let resolved = self.resolve(vars, templates);
         inc == &resolved
+    }
+}
+
+impl Dynamic {
+    fn handle_single(
+        &self,
+        vars: &HashMap<String, UrlVar>,
+        templates: &HashMap<String, Body>,
+    ) -> Option<Value> {
+        match &self.values[0] {
+            DynamicValue::Var(ident) => {
+                if let Some(var) = vars.get(ident) {
+                    return match var {
+                        UrlVar::String(s) => Some(Value::String(s.clone())),
+                        UrlVar::Number(n) => Some(Value::Number((*n).into())),
+                    };
+                }
+            }
+            DynamicValue::Ref(ref_name) => {
+                if let Some(body) = templates.get(ref_name) {
+                    return Some(body.resolve(vars, templates));
+                } else {
+                    warn!("Template `$ref.{ref_name} not defined.");
+                    return Some(serde_yaml::Value::Null);
+                }
+            }
+            _ => {}
+        }
+        None
     }
 }
 

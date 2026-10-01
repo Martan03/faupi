@@ -107,7 +107,7 @@ impl Server {
                     .await
         {
             info!("Request {} {} -> Failed body validation.", method, url);
-            return Ok(Self::finalize_res(res, cors));
+            return Ok(Self::finalize_res(*res, cors));
         }
 
         let hyper_res = response.to_http_response(&vars, &router.templates)?;
@@ -123,7 +123,7 @@ impl Server {
         exp_body: &Body,
         vars: &HashMap<String, UrlVar>,
         templates: &HashMap<String, Body>,
-    ) -> std::result::Result<(), Response<Full<Bytes>>> {
+    ) -> std::result::Result<(), Box<Response<Full<Bytes>>>> {
         let inc_bytes = match req.into_body().collect().await {
             Ok(collected) => collected.to_bytes(),
             Err(e) => {
@@ -132,7 +132,7 @@ impl Server {
                     .status(StatusCode::BAD_REQUEST)
                     .body(Full::new(Bytes::from("Failed to read body")))
                     .unwrap();
-                return Err(err_res);
+                return Err(Box::new(err_res));
             }
         };
 
@@ -152,7 +152,7 @@ impl Server {
                     "Request body does not match expected scheme.",
                 )))
                 .unwrap();
-            return Err(bad_req);
+            return Err(Box::new(bad_req));
         }
         Ok(())
     }

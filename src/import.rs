@@ -85,7 +85,7 @@ impl Import {
         is_req: bool,
     ) -> Result<Body> {
         let ty = match &obj.schema_type {
-            Some(SchemaTypeSet::Single(ty)) => ty.clone(),
+            Some(SchemaTypeSet::Single(ty)) => *ty,
             Some(SchemaTypeSet::Multiple(items)) => {
                 items.first().copied().unwrap_or(SchemaType::Null)
             }

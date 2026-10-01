@@ -16,7 +16,7 @@ impl<'a> UrlParser<'a> {
     }
 
     /// Gets next URL segment.
-    pub fn next(&mut self) -> Result<Option<UrlSegment>> {
+    pub fn next_seg(&mut self) -> Result<Option<UrlSegment>> {
         if self.cur.is_none() {
             return Ok(None);
         }
@@ -97,7 +97,7 @@ impl<'a> UrlParser<'a> {
             ident.push(c);
             self.cur = self.chars.next();
         }
-        return Ok(ident);
+        Ok(ident)
     }
 
     /// Reads leading whitespaces.
