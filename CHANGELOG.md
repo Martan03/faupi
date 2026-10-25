@@ -1,5 +1,11 @@
 # faupi changelog
 
+## v0.3.1
+
+### Fixes
+
+- Fix reference always being casted to string (object not possible)
+
 ## v0.3.0 - Attack of the Templates
 
 ### Features
